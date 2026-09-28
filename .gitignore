@@ -1,0 +1,20 @@
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+.auth/
+
+# Claude Code (personal settings stay local)
+.claude/projects/
+.claude/settings.local.json
+
+# Environment files (keep .env.example as template)
+env/.env.*
+!env/.env.example
+
+# macOS
+.DS_Store
+
+# Playwright CLI
+.playwright-cli/

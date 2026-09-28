@@ -1,0 +1,183 @@
+/**
+ * Application-specific constants.
+ * Add your application's repeated string values here.
+ *
+ * Paths with parameters keep the placeholder from their source — `:id` for
+ * UI routes (Angular router), `{productId}` for API endpoints (OpenAPI) —
+ * and are filled with `fillPath` from `helpers/util/util.ts`.
+ *
+ * @example
+ * ```ts
+ * // In a page object — tests then assert on the locator via `pm`
+ * get errorMessage(): Locator {
+ *     return this.page.getByText(Messages.LOGIN_ERROR);
+ * }
+ *
+ * // In an API test
+ * url: ApiEndpoints.LOGIN,
+ * url: fillPath(ApiEndpoints.PRODUCT, { productId }),
+ * ```
+ */
+
+/** Common UI messages — every value verified against the live demo app */
+export enum Messages {
+    LOGIN_ERROR = 'Invalid email or password',
+    EMAIL_REQUIRED = 'Email is required',
+    PASSWORD_REQUIRED = 'Password is required',
+    EMAIL_FORMAT_INVALID = 'Email format is invalid',
+}
+
+/** UI route paths — taken from the Angular router of the live app */
+export enum AppRoutes {
+    // Shop
+    HOME = '/',
+    PRODUCT = '/product/:id',
+    CATEGORY = '/category/:slug',
+    RENTALS = '/rentals',
+    COMPARISON = '/comparison',
+    CONTACT = '/contact',
+    PRIVACY = '/privacy',
+    CHECKOUT = '/checkout',
+
+    // Auth
+    LOGIN = '/auth/login',
+    REGISTER = '/auth/register',
+    FORGOT_PASSWORD = '/auth/forgot-password',
+
+    // Account
+    ACCOUNT = '/account',
+    ACCOUNT_PROFILE = '/account/profile',
+    ACCOUNT_FAVORITES = '/account/favorites',
+    ACCOUNT_INVOICES = '/account/invoices',
+    ACCOUNT_INVOICE = '/account/invoices/:id',
+    ACCOUNT_MESSAGES = '/account/messages',
+    ACCOUNT_MESSAGE = '/account/messages/:id',
+
+    // Admin
+    ADMIN_DASHBOARD = '/admin/dashboard',
+    ADMIN_PRODUCTS = '/admin/products',
+    ADMIN_PRODUCT_ADD = '/admin/products/add',
+    ADMIN_PRODUCT_EDIT = '/admin/products/edit/:id',
+    ADMIN_CATEGORIES = '/admin/categories',
+    ADMIN_CATEGORY_ADD = '/admin/categories/add',
+    ADMIN_CATEGORY_EDIT = '/admin/categories/edit/:id',
+    ADMIN_BRANDS = '/admin/brands',
+    ADMIN_BRAND_ADD = '/admin/brands/add',
+    ADMIN_BRAND_EDIT = '/admin/brands/edit/:id',
+    ADMIN_ORDERS = '/admin/orders',
+    ADMIN_ORDER_ADD = '/admin/orders/add',
+    ADMIN_ORDER_EDIT = '/admin/orders/edit/:id',
+    ADMIN_USERS = '/admin/users',
+    ADMIN_USER_ADD = '/admin/users/add',
+    ADMIN_USER_EDIT = '/admin/users/edit/:id',
+    ADMIN_MESSAGES = '/admin/messages',
+    ADMIN_MESSAGE = '/admin/messages/:id',
+    ADMIN_SETTINGS = '/admin/settings',
+    ADMIN_REPORTS_STATISTICS = '/admin/reports/statistics',
+    ADMIN_REPORTS_SALES_PER_MONTH = '/admin/reports/average-sales-per-month',
+    ADMIN_REPORTS_SALES_PER_WEEK = '/admin/reports/average-sales-per-week',
+}
+
+/** API endpoint paths — taken from the OpenAPI spec (`/docs?api-docs.json`) */
+export enum ApiEndpoints {
+    // Brand
+    BRANDS = '/brands',
+    BRAND = '/brands/{brandId}',
+    BRANDS_SEARCH = '/brands/search',
+
+    // Cart
+    CARTS = '/carts',
+    CART = '/carts/{cartId}',
+    CART_PRODUCT_QUANTITY = '/carts/{cartId}/product/quantity',
+    CART_PRODUCT = '/carts/{cartId}/product/{productId}',
+
+    // Category
+    CATEGORIES = '/categories',
+    CATEGORY = '/categories/{categoryId}',
+    CATEGORIES_TREE = '/categories/tree',
+    CATEGORY_TREE = '/categories/tree/{categoryId}',
+    CATEGORIES_SEARCH = '/categories/search',
+
+    // Contact
+    MESSAGES = '/messages',
+    MESSAGE = '/messages/{messageId}',
+    MESSAGE_ATTACH_FILE = '/messages/{messageId}/attach-file',
+    MESSAGE_REPLY = '/messages/{messageId}/reply',
+    MESSAGE_STATUS = '/messages/{messageId}/status',
+
+    // Favorite
+    FAVORITES = '/favorites',
+    FAVORITE = '/favorites/{favoriteId}',
+
+    // Image
+    IMAGES = '/images',
+
+    // Invoice
+    INVOICES = '/invoices',
+    INVOICE = '/invoices/{invoiceId}',
+    INVOICES_GUEST = '/invoices/guest',
+    INVOICE_STATUS = '/invoices/{invoiceId}/status',
+    INVOICES_SEARCH = '/invoices/search',
+    INVOICE_DOWNLOAD_PDF = '/invoices/{invoice_number}/download-pdf',
+    INVOICE_DOWNLOAD_PDF_STATUS = '/invoices/{invoice_number}/download-pdf-status',
+
+    // Payment
+    PAYMENT_CHECK = '/payment/check',
+
+    // Postcode
+    POSTCODE_LOOKUP = '/postcode-lookup',
+
+    // Product
+    PRODUCTS = '/products',
+    PRODUCT = '/products/{productId}',
+    PRODUCT_RELATED = '/products/{productId}/related',
+    PRODUCTS_SEARCH = '/products/search',
+
+    // Product Spec
+    PRODUCT_SPECS = '/products/{productId}/specs',
+    PRODUCT_SPEC = '/products/{productId}/specs/{specId}',
+    PRODUCT_SPEC_NAMES = '/product-specs/names',
+
+    // Report
+    REPORT_TOTAL_SALES_PER_COUNTRY = '/reports/total-sales-per-country',
+    REPORT_TOP10_PURCHASED_PRODUCTS = '/reports/top10-purchased-products',
+    REPORT_TOP10_BEST_SELLING_CATEGORIES = '/reports/top10-best-selling-categories',
+    REPORT_TOTAL_SALES_OF_YEARS = '/reports/total-sales-of-years',
+    REPORT_AVERAGE_SALES_PER_MONTH = '/reports/average-sales-per-month',
+    REPORT_AVERAGE_SALES_PER_WEEK = '/reports/average-sales-per-week',
+    REPORT_CUSTOMERS_BY_COUNTRY = '/reports/customers-by-country',
+
+    // Stream
+    SALES_STREAM = '/sales-stream',
+
+    // TOTP
+    TOTP_SETUP = '/totp/setup',
+    TOTP_VERIFY = '/totp/verify',
+
+    // User
+    USERS = '/users',
+    USER = '/users/{userId}',
+    USERS_SEARCH = '/users/search',
+    LOGIN = '/users/login',
+    LOGOUT = '/users/logout',
+    REFRESH = '/users/refresh',
+    CURRENT_USER = '/users/me',
+    REGISTER = '/users/register',
+    FORGOT_PASSWORD = '/users/forgot-password',
+    CHANGE_PASSWORD = '/users/change-password',
+}
+
+/** Storage state file paths */
+export enum StorageStatePaths {
+    APP = '.auth/app/appStorageState.json',
+    ADMIN = '.auth/app/adminStorageState.json',
+}
+
+/** User validation rules from the OpenAPI `UserRequest` contract */
+export enum UserRules {
+    MIN_AGE = 18,
+    MAX_AGE = 75,
+    FIRST_NAME_MAX_LENGTH = 40,
+    LAST_NAME_MAX_LENGTH = 20,
+    PASSWORD_MIN_LENGTH = 8,
+}

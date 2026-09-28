@@ -1,0 +1,9 @@
+npx lint-staged
+
+# Skill-rules + skill-references drift gates run only when files in the
+# Claude rule tree are staged, so they don't slow unrelated commits.
+if git diff --cached --name-only --diff-filter=ACMR \
+    | grep -qE '^\.claude/skills/'; then
+    npm run --silent check:skills-drift
+    npm run --silent check:skills-references
+fi
