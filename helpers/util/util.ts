@@ -51,3 +51,25 @@ export function fillPath(
         }
     );
 }
+
+/**
+ * Narrows an optional value to a defined one, failing loudly when it is
+ * missing. Use it on response fields that the contract marks optional but
+ * the test needs (typically an `id` to call the next endpoint).
+ *
+ * @param {T | null | undefined} value - The value to check.
+ * @param {string} label - What the value is, for the error message.
+ * @returns {T} The value, guaranteed not to be `null` / `undefined`.
+ * @throws {Error} When the value is `null` or `undefined`.
+ *
+ * @example
+ * ```ts
+ * const brandId = required(body.id, 'brand id');
+ * ```
+ */
+export function required<T>(value: T | null | undefined, label: string): T {
+    if (value === null || value === undefined) {
+        throw new Error(`Expected ${label} to be present, got ${value}`);
+    }
+    return value;
+}

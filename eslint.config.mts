@@ -74,7 +74,20 @@ const config = [
             'playwright/no-raw-locators': 'warn', // MUST: Prefer semantic locators
             'playwright/no-useless-not': 'error', // Clean assertions
             'playwright/no-nth-methods': 'warn', // Avoid brittle nth selectors
-            'playwright/prefer-lowercase-title': 'warn', // Consistent test naming
+            'playwright/prefer-lowercase-title': [
+                'warn',
+                // API specs use one describe per "METHOD /path" (api-testing skill)
+                {
+                    allowedPrefixes: [
+                        'GET',
+                        'POST',
+                        'PUT',
+                        'PATCH',
+                        'DELETE',
+                        'QUERY',
+                    ],
+                },
+            ], // Consistent test naming
             'playwright/prefer-to-be': 'error', // Use toBe over toEqual for primitives
             'playwright/prefer-to-have-length': 'error', // Cleaner length assertions
             'playwright/require-top-level-describe': 'error', // Organized test structure

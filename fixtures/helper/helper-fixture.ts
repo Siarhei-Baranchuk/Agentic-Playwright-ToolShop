@@ -122,13 +122,33 @@ export const test = base.extend<HelperFixtures>({
         expect(TokenResponseSchema.parse(login.body)).toBeTruthy();
 
         // ── YIELD: Passes data to the test ───────────────────────────
-        await use({
+        const user: RegisteredUser = {
             ...payload,
             id,
             token: (login.body as TokenResponse).access_token,
-        });
+        };
+        await use(user);
 
         // ── TEARDOWN: Runs after the test (even on failure) ──────────
+        // A user with favorites cannot be deleted (409), and a product in a
+        // favorites list cannot be deleted either — remove them first, so a
+        // test that failed half-way leaves nothing behind.
+        const favorites = await apiRequest({
+            request,
+            method: 'GET',
+            url: ApiEndpoints.FAVORITES,
+            headers: user.token,
+        });
+        expect(favorites.status).toBe(200);
+        for (const { id: favoriteId } of favorites.body as { id: string }[]) {
+            await apiRequest({
+                request,
+                method: 'DELETE',
+                url: fillPath(ApiEndpoints.FAVORITE, { favoriteId }),
+                headers: user.token,
+            });
+        }
+
         const deletion = await apiRequest({
             request,
             method: 'DELETE',

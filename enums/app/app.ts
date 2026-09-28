@@ -181,3 +181,21 @@ export enum UserRules {
     LAST_NAME_MAX_LENGTH = 20,
     PASSWORD_MIN_LENGTH = 8,
 }
+
+/** Catalog validation rules — backend FormRequests (brand, category, product, product spec) */
+export enum CatalogRules {
+    NAME_AND_SLUG_MAX_LENGTH = 120,
+    DESCRIPTION_MAX_LENGTH = 1250,
+    SPEC_NAME_MAX_LENGTH = 100,
+    SPEC_VALUE_MAX_LENGTH = 255,
+    SPEC_UNIT_MAX_LENGTH = 30,
+}
+
+/** Product CO₂ ratings offered by the admin product form; A and B count as eco-friendly */
+export enum Co2Ratings {
+    A = 'A',
+    B = 'B',
+    C = 'C',
+    D = 'D',
+    E = 'E',
+}

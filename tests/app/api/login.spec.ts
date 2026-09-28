@@ -4,8 +4,8 @@ import {
     TokenResponseSchema,
 } from '../../../fixtures/api/schemas/app/userSchema';
 import {
-    UnauthorizedResponse,
-    UnauthorizedResponseSchema,
+    LoginErrorResponse,
+    LoginErrorResponseSchema,
 } from '../../../fixtures/api/schemas/util/errorResponseSchema';
 import { expect, test } from '../../../fixtures/pom/test-options';
 import { INVALID_LOGIN_ATTEMPTS } from '../../../test-data/static/app/invalidCredentials';
@@ -34,16 +34,14 @@ test.describe('api/login', () => {
             `should return 401 for invalid credentials - ${description} - email: ${email} - password: ${password}`,
             { tag: '@api' },
             async ({ apiRequest }) => {
-                const { status, body } = await apiRequest<UnauthorizedResponse>(
-                    {
-                        method: 'POST',
-                        url: ApiEndpoints.LOGIN,
-                        body: { email, password },
-                    }
-                );
+                const { status, body } = await apiRequest<LoginErrorResponse>({
+                    method: 'POST',
+                    url: ApiEndpoints.LOGIN,
+                    body: { email, password },
+                });
 
                 expect(status).toBe(401);
-                expect(UnauthorizedResponseSchema.parse(body)).toBeTruthy();
+                expect(LoginErrorResponseSchema.parse(body)).toBeTruthy();
             }
         );
     }
