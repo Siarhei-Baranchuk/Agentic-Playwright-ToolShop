@@ -64,9 +64,9 @@ After generating code, confirm each box:
 - [ ] Happy-path test data uses factories; curated invalid values come from `test-data/static/util/` or `test-data/static/{area}/`
 - [ ] Zod schemas use `z.strictObject()` — never `z.object()`
 - [ ] API response validation uses `expect(SchemaName.parse(body)).toBeTruthy();`
-- [ ] API tests with request bodies include empty-body + per-field omission + per-field invalid-type `for...of` loops (universal arrays imported from `test-data/static/util/invalid-values.ts`)
+- [ ] API tests with request bodies follow the risk-based negative model: empty body + per-field omission + `for...of` over the minimal `INVALID_*` sets on POST; one partial-update test + one `PRIMARY_INVALID_VALUES` test per field on PUT/PATCH (all from `test-data/static/util/invalid-values.ts`)
 - [ ] **Coverage audit:** Every status code in the OpenAPI spec has a matching test (or `test.skip` + `// FIXME`)
-- [ ] **Path parameter tests:** Endpoints with path params have the invalid-format data-driven loop
+- [ ] **Path parameter tests:** Endpoints with path params loop over `INVALID_PATH_IDS`
 - [ ] **405 tests:** At least one unsupported HTTP method test per endpoint
 - [ ] **Auth matrix:** Endpoints with `security` have both 401 (no token) and 403 (wrong role) tests
 - [ ] **Behavior mismatches:** Any divergence from spec uses `test.skip` + `// FIXME: <ticket-url>`, never silent omission

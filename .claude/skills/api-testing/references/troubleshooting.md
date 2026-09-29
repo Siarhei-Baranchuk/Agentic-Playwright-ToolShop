@@ -21,7 +21,7 @@
 ## Only an empty-body `400` test exists for a POST/PUT/PATCH
 
 **Cause:** Coverage gap — empty-body alone is forbidden (Phase 6).
-**Fix:** Add two additional loops: per-field invalid types (spread-and-override) and per-field omission (destructure + rest).
+**Fix:** Add the risk-based negative set (Phase 6): on POST, per-field omission (destructure + rest) and per-field invalid types over the minimal `INVALID_*` arrays; on PUT/PATCH, one `PRIMARY_INVALID_VALUES` test per field plus one partial-update test.
 
 ## ESLint fails with `playwright/no-skipped-test` on an intentional `test.skip`
 

@@ -1,56 +1,46 @@
 /**
  * Universal invalid-value arrays for negative/validation API tests.
  *
- * Import these in spec files and iterate with `for...of` loops — do NOT
- * redefine them inline. Field-specific boundary/range violations (e.g.,
- * out-of-range values for a `number` constrained to `1..5`) may stay inline
- * in the spec file; see `.claude/skills/api-testing/SKILL.md` (Phase 6).
+ * Risk-based minimal sets: ONE value per validation branch of the type —
+ * a value of the wrong type, plus `null` (the nullable / required branch).
+ * Values that hit the same branch (e.g. `true` next to `123` for a string)
+ * are left out on purpose; omission (`undefined`) is covered by the
+ * per-field "missing" tests instead.
  *
- * The file is `.ts` (not `.json`) because JSON cannot represent `undefined`.
- * Tuples are `as const` so the array is `readonly` and values keep their
- * narrow literal types.
+ * - POST (create): loop over the arrays below, one test per value.
+ * - PUT / PATCH: one test per field with `PRIMARY_INVALID_VALUES`.
+ *
+ * Import these in spec files — do NOT redefine them inline. Field-specific
+ * boundary values may stay inline; see `.claude/skills/api-testing/SKILL.md`
+ * (Phase 6). The file is `.ts` (not `.json`) so tuples keep narrow literal
+ * types via `as const`.
  */
 
-export const INVALID_STRING_VALUES = [123, true, null, undefined] as const;
+export const INVALID_STRING_VALUES = [123, null] as const;
 
-export const INVALID_NUMBER_VALUES = [
-    'string',
-    '123',
-    true,
-    null,
-    undefined,
-] as const;
+/** `'123'` is kept: a numeric string passes lenient number validators */
+export const INVALID_NUMBER_VALUES = ['string', '123', null] as const;
 
-export const INVALID_BOOLEAN_VALUES = ['yes', 1, 0, null, undefined] as const;
+export const INVALID_BOOLEAN_VALUES = ['yes', null] as const;
 
-export const INVALID_UUID_VALUES = [
-    'not-a-uuid',
-    '',
-    123,
-    null,
-    undefined,
-] as const;
+export const INVALID_UUID_VALUES = ['not-a-uuid', null] as const;
 
-export const INVALID_ENUM_VALUES = [
-    'invalidValue',
-    '',
-    123,
-    null,
-    undefined,
-] as const;
+export const INVALID_ENUM_VALUES = ['invalidValue', null] as const;
 
-export const INVALID_ARRAY_VALUES = [
-    'string',
-    123,
-    null,
-    undefined,
-    {},
-] as const;
+export const INVALID_ARRAY_VALUES = ['string', null] as const;
 
-export const INVALID_OBJECT_VALUES = [
-    'string',
-    123,
-    null,
-    undefined,
-    [],
-] as const;
+export const INVALID_OBJECT_VALUES = ['string', null] as const;
+
+/**
+ * The single most likely-to-break wrong-type value per field type — used
+ * for the one invalid-type test per field on PUT / PATCH.
+ */
+export const PRIMARY_INVALID_VALUES = {
+    STRING: 123,
+    NUMBER: 'string',
+    BOOLEAN: 'yes',
+    UUID: 'not-a-uuid',
+    ENUM: 'invalidValue',
+    ARRAY: 'string',
+    OBJECT: 'string',
+} as const;

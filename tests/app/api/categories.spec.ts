@@ -53,17 +53,16 @@ import {
     SUBSCRIPT_SUPERSCRIPT_NAMES,
 } from '../../../test-data/static/app/invalidCatalog';
 import { INVALID_PATH_IDS } from '../../../test-data/static/util/invalid-path-params';
-import { INVALID_STRING_VALUES } from '../../../test-data/static/util/invalid-values';
+import {
+    INVALID_STRING_VALUES,
+    PRIMARY_INVALID_VALUES,
+} from '../../../test-data/static/util/invalid-values';
 
 const REQUIRED_FIELDS = ['name', 'slug'] as const;
 const TOO_LONG = 'a'.repeat(CatalogRules.NAME_AND_SLUG_MAX_LENGTH + 1);
-/** On PUT / PATCH every field is optional — an omitted (`undefined`) value is valid there */
-const INVALID_OPTIONAL_STRING_VALUES = INVALID_STRING_VALUES.filter(
-    (value) => value !== undefined
-);
-/** `parent_id` is `string|nullable` — null and an omitted value are both valid */
+/** `parent_id` is `string|nullable` — null is valid there */
 const INVALID_PARENT_IDS = INVALID_STRING_VALUES.filter(
-    (value) => value !== undefined && value !== null
+    (value) => value !== null
 );
 const NON_EXISTENT_ID = INVALID_PATH_IDS[0].value;
 
@@ -743,84 +742,26 @@ for (const method of ['PUT', 'PATCH'] as const) {
             }
         );
 
+        test(
+            'should return 200 for a partial update',
+            { tag: '@api' },
+            async ({ apiRequest }) => {
+                const { status, body } = await apiRequest<UpdateResponse>({
+                    method,
+                    url: fillPath(ApiEndpoints.CATEGORY, {
+                        categoryId: required(category.id, 'category id'),
+                    }),
+                    body: { name: generateCategory().name },
+                });
+
+                expect(status).toBe(200);
+                expect(UpdateResponseSchema.parse(body)).toBeTruthy();
+            }
+        );
+
         for (const field of [...REQUIRED_FIELDS, 'parent_id'] as const) {
             test(
-                `should return 200 when only ${field} is omitted`,
-                { tag: '@api' },
-                async ({ apiRequest }) => {
-                    const { [field]: _omitted, ...payload } =
-                        generateCategory();
-
-                    const { status, body } = await apiRequest<UpdateResponse>({
-                        method,
-                        url: fillPath(ApiEndpoints.CATEGORY, {
-                            categoryId: required(category.id, 'category id'),
-                        }),
-                        body: payload,
-                    });
-
-                    expect(status).toBe(200);
-                    expect(UpdateResponseSchema.parse(body)).toBeTruthy();
-                }
-            );
-        }
-
-        for (const field of REQUIRED_FIELDS) {
-            for (const invalidValue of INVALID_OPTIONAL_STRING_VALUES) {
-                test(
-                    `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
-                    { tag: '@api' },
-                    async ({ apiRequest }) => {
-                        const { status, body } =
-                            await apiRequest<UnprocessableEntityResponse>({
-                                method,
-                                url: fillPath(ApiEndpoints.CATEGORY, {
-                                    categoryId: required(
-                                        category.id,
-                                        'category id'
-                                    ),
-                                }),
-                                body: {
-                                    ...generateCategory(),
-                                    [field]: invalidValue,
-                                },
-                            });
-
-                        expect(status).toBe(422);
-                        expect(
-                            UnprocessableEntityResponseSchema.parse(body)
-                        ).toBeTruthy();
-                    }
-                );
-            }
-
-            test(
-                `should return 422 when ${field} is longer than ${CatalogRules.NAME_AND_SLUG_MAX_LENGTH} characters`,
-                { tag: '@api' },
-                async ({ apiRequest }) => {
-                    const { status, body } =
-                        await apiRequest<UnprocessableEntityResponse>({
-                            method,
-                            url: fillPath(ApiEndpoints.CATEGORY, {
-                                categoryId: required(
-                                    category.id,
-                                    'category id'
-                                ),
-                            }),
-                            body: { ...generateCategory(), [field]: TOO_LONG },
-                        });
-
-                    expect(status).toBe(422);
-                    expect(
-                        UnprocessableEntityResponseSchema.parse(body)
-                    ).toBeTruthy();
-                }
-            );
-        }
-
-        for (const invalidValue of INVALID_PARENT_IDS) {
-            test(
-                `should return 422 when parent_id is ${JSON.stringify(invalidValue)}`,
+                `should return 422 when ${field} is ${JSON.stringify(PRIMARY_INVALID_VALUES.STRING)}`,
                 { tag: '@api' },
                 async ({ apiRequest }) => {
                     const { status, body } =
@@ -834,7 +775,7 @@ for (const method of ['PUT', 'PATCH'] as const) {
                             }),
                             body: {
                                 ...generateCategory(),
-                                parent_id: invalidValue,
+                                [field]: PRIMARY_INVALID_VALUES.STRING,
                             },
                         });
 

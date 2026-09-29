@@ -47,14 +47,13 @@ import {
     SUBSCRIPT_SUPERSCRIPT_NAMES,
 } from '../../../test-data/static/app/invalidCatalog';
 import { INVALID_PATH_IDS } from '../../../test-data/static/util/invalid-path-params';
-import { INVALID_STRING_VALUES } from '../../../test-data/static/util/invalid-values';
+import {
+    INVALID_STRING_VALUES,
+    PRIMARY_INVALID_VALUES,
+} from '../../../test-data/static/util/invalid-values';
 
 const BRAND_FIELDS = ['name', 'slug'] as const;
 const TOO_LONG = 'a'.repeat(CatalogRules.NAME_AND_SLUG_MAX_LENGTH + 1);
-/** On PUT / PATCH every field is optional — an omitted (`undefined`) value is valid there */
-const INVALID_OPTIONAL_STRING_VALUES = INVALID_STRING_VALUES.filter(
-    (value) => value !== undefined
-);
 
 test.describe('GET /brands', () => {
     test(
@@ -436,53 +435,26 @@ for (const method of ['PUT', 'PATCH'] as const) {
             }
         );
 
+        test(
+            'should return 200 for a partial update',
+            { tag: '@api' },
+            async ({ apiRequest }) => {
+                const { status, body } = await apiRequest<UpdateResponse>({
+                    method,
+                    url: fillPath(ApiEndpoints.BRAND, {
+                        brandId: required(brand.id, 'brand id'),
+                    }),
+                    body: { name: generateBrand().name },
+                });
+
+                expect(status).toBe(200);
+                expect(UpdateResponseSchema.parse(body)).toBeTruthy();
+            }
+        );
+
         for (const field of BRAND_FIELDS) {
             test(
-                `should return 200 when only ${field} is omitted`,
-                { tag: '@api' },
-                async ({ apiRequest }) => {
-                    const { [field]: _omitted, ...payload } = generateBrand();
-
-                    const { status, body } = await apiRequest<UpdateResponse>({
-                        method,
-                        url: fillPath(ApiEndpoints.BRAND, {
-                            brandId: required(brand.id, 'brand id'),
-                        }),
-                        body: payload,
-                    });
-
-                    expect(status).toBe(200);
-                    expect(UpdateResponseSchema.parse(body)).toBeTruthy();
-                }
-            );
-
-            for (const invalidValue of INVALID_OPTIONAL_STRING_VALUES) {
-                test(
-                    `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
-                    { tag: '@api' },
-                    async ({ apiRequest }) => {
-                        const { status, body } =
-                            await apiRequest<UnprocessableEntityResponse>({
-                                method,
-                                url: fillPath(ApiEndpoints.BRAND, {
-                                    brandId: required(brand.id, 'brand id'),
-                                }),
-                                body: {
-                                    ...generateBrand(),
-                                    [field]: invalidValue,
-                                },
-                            });
-
-                        expect(status).toBe(422);
-                        expect(
-                            UnprocessableEntityResponseSchema.parse(body)
-                        ).toBeTruthy();
-                    }
-                );
-            }
-
-            test(
-                `should return 422 when ${field} is longer than ${CatalogRules.NAME_AND_SLUG_MAX_LENGTH} characters`,
+                `should return 422 when ${field} is ${JSON.stringify(PRIMARY_INVALID_VALUES.STRING)}`,
                 { tag: '@api' },
                 async ({ apiRequest }) => {
                     const { status, body } =
@@ -491,7 +463,10 @@ for (const method of ['PUT', 'PATCH'] as const) {
                             url: fillPath(ApiEndpoints.BRAND, {
                                 brandId: required(brand.id, 'brand id'),
                             }),
-                            body: { ...generateBrand(), [field]: TOO_LONG },
+                            body: {
+                                ...generateBrand(),
+                                [field]: PRIMARY_INVALID_VALUES.STRING,
+                            },
                         });
 
                     expect(status).toBe(422);

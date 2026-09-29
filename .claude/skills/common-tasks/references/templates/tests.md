@@ -84,11 +84,13 @@ Requirements:
 - Tag with @api
 - For endpoints with a body (POST/PUT/PATCH), include comprehensive validation:
   - Empty body test ({})
-  - Each required field omitted individually (destructure + rest)
-  - Each field tested with type-inappropriate values via for...of loop,
-    importing the universal arrays from test-data/static/util/invalid-values.ts
-    (INVALID_STRING_VALUES, INVALID_NUMBER_VALUES, etc.) — never redefine inline
-  - Field-specific boundary / range violations may stay inline in the spec
+  - POST: each required field omitted individually (destructure + rest)
+  - POST: each field tested via for...of over the minimal universal arrays
+    from test-data/static/util/invalid-values.ts (INVALID_STRING_VALUES,
+    INVALID_NUMBER_VALUES, etc. — one value per validation branch)
+  - PUT/PATCH: one partial-update test + one PRIMARY_INVALID_VALUES test per field
+  - Length / format boundaries on POST only; they may stay inline in the spec
+  - Path parameters: loop over INVALID_PATH_IDS
   - Use factory data (generateX()) for the valid base payload
 - For endpoints with path params: invalid format data-driven loop (numeric, boolean-like, special chars, SQL injection)
 - For endpoints with auth: 401 (no token) and 403 (wrong role) tests

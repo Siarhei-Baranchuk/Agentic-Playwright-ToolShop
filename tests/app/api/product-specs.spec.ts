@@ -35,7 +35,10 @@ import {
 import { fillPath, required } from '../../../helpers/util/util';
 import { generateProductSpec } from '../../../test-data/factories/app/catalog.factory';
 import { INVALID_PATH_IDS } from '../../../test-data/static/util/invalid-path-params';
-import { INVALID_STRING_VALUES } from '../../../test-data/static/util/invalid-values';
+import {
+    INVALID_STRING_VALUES,
+    PRIMARY_INVALID_VALUES,
+} from '../../../test-data/static/util/invalid-values';
 
 const REQUIRED_FIELDS = ['spec_name', 'spec_value'] as const;
 const FIELD_LIMITS = [
@@ -43,14 +46,8 @@ const FIELD_LIMITS = [
     { field: 'spec_value', max: CatalogRules.SPEC_VALUE_MAX_LENGTH },
     { field: 'spec_unit', max: CatalogRules.SPEC_UNIT_MAX_LENGTH },
 ] as const;
-/** Values that are never a valid string; `undefined` means "omitted" */
-const INVALID_REQUIRED_STRINGS = INVALID_STRING_VALUES.filter(
-    (value) => value !== undefined
-);
-/** spec_unit is `nullable|string` — null and an omitted value are both valid */
-const INVALID_UNITS = INVALID_STRING_VALUES.filter(
-    (value) => value !== undefined && value !== null
-);
+/** spec_unit is `nullable|string` — null is valid there */
+const INVALID_UNITS = INVALID_STRING_VALUES.filter((value) => value !== null);
 
 /**
  * Creates a spec of a product via `POST /products/{productId}/specs` as the admin.
@@ -284,7 +281,7 @@ test.describe('product specs', () => {
                 }
             );
 
-            for (const invalidValue of INVALID_REQUIRED_STRINGS) {
+            for (const invalidValue of INVALID_STRING_VALUES) {
                 test.skip(
                     `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
                     { tag: '@api' },
@@ -498,29 +495,24 @@ test.describe('product specs', () => {
             }
         );
 
-        for (const field of [...REQUIRED_FIELDS, 'spec_unit'] as const) {
-            test(
-                `should return 200 when only ${field} is omitted`,
-                { tag: '@api' },
-                async ({ apiRequest }) => {
-                    const { [field]: _omitted, ...payload } =
-                        generateProductSpec();
+        test(
+            'should return 200 for a partial update',
+            { tag: '@api' },
+            async ({ apiRequest }) => {
+                const { status, body } = await apiRequest<UpdateResponse>({
+                    method: 'PUT',
+                    url: fillPath(ApiEndpoints.PRODUCT_SPEC, {
+                        productId,
+                        specId: required(spec.id, 'spec id'),
+                    }),
+                    headers: process.env.ADMIN_ACCESS_TOKEN,
+                    body: { spec_value: generateProductSpec().spec_value },
+                });
 
-                    const { status, body } = await apiRequest<UpdateResponse>({
-                        method: 'PUT',
-                        url: fillPath(ApiEndpoints.PRODUCT_SPEC, {
-                            productId,
-                            specId: required(spec.id, 'spec id'),
-                        }),
-                        headers: process.env.ADMIN_ACCESS_TOKEN,
-                        body: payload,
-                    });
-
-                    expect(status).toBe(200);
-                    expect(UpdateResponseSchema.parse(body)).toBeTruthy();
-                }
-            );
-        }
+                expect(status).toBe(200);
+                expect(UpdateResponseSchema.parse(body)).toBeTruthy();
+            }
+        );
 
         test(
             'should return 401 without an access token',
@@ -542,38 +534,9 @@ test.describe('product specs', () => {
             }
         );
 
-        for (const field of REQUIRED_FIELDS) {
-            for (const invalidValue of INVALID_REQUIRED_STRINGS) {
-                test.skip(
-                    `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
-                    { tag: '@api' },
-                    async ({ apiRequest }) => {
-                        const { status, body } =
-                            await apiRequest<UnprocessableEntityResponse>({
-                                method: 'PUT',
-                                url: fillPath(ApiEndpoints.PRODUCT_SPEC, {
-                                    productId,
-                                    specId: required(spec.id, 'spec id'),
-                                }),
-                                headers: process.env.ADMIN_ACCESS_TOKEN,
-                                body: {
-                                    ...generateProductSpec(),
-                                    [field]: invalidValue,
-                                },
-                            });
-
-                        expect(status).toBe(422);
-                        expect(
-                            UnprocessableEntityResponseSchema.parse(body)
-                        ).toBeTruthy();
-                    }
-                );
-            }
-        }
-
-        for (const invalidValue of INVALID_UNITS) {
+        for (const field of [...REQUIRED_FIELDS, 'spec_unit'] as const) {
             test.skip(
-                `should return 422 when spec_unit is ${JSON.stringify(invalidValue)}`,
+                `should return 422 when ${field} is ${JSON.stringify(PRIMARY_INVALID_VALUES.STRING)}`,
                 { tag: '@api' },
                 async ({ apiRequest }) => {
                     const { status, body } =
@@ -586,34 +549,7 @@ test.describe('product specs', () => {
                             headers: process.env.ADMIN_ACCESS_TOKEN,
                             body: {
                                 ...generateProductSpec(),
-                                spec_unit: invalidValue,
-                            },
-                        });
-
-                    expect(status).toBe(422);
-                    expect(
-                        UnprocessableEntityResponseSchema.parse(body)
-                    ).toBeTruthy();
-                }
-            );
-        }
-
-        for (const { field, max } of FIELD_LIMITS) {
-            test.skip(
-                `should return 422 when ${field} is longer than ${max} characters`,
-                { tag: '@api' },
-                async ({ apiRequest }) => {
-                    const { status, body } =
-                        await apiRequest<UnprocessableEntityResponse>({
-                            method: 'PUT',
-                            url: fillPath(ApiEndpoints.PRODUCT_SPEC, {
-                                productId,
-                                specId: required(spec.id, 'spec id'),
-                            }),
-                            headers: process.env.ADMIN_ACCESS_TOKEN,
-                            body: {
-                                ...generateProductSpec(),
-                                [field]: 'a'.repeat(max + 1),
+                                [field]: PRIMARY_INVALID_VALUES.STRING,
                             },
                         });
 

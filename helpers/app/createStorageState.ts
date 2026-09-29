@@ -1,5 +1,9 @@
 import { expect, request, type Page } from '@playwright/test';
-import { ApiEndpoints, StorageStatePaths } from '../../enums/app/app';
+import {
+    ApiEndpoints,
+    AuthRules,
+    StorageStatePaths,
+} from '../../enums/app/app';
 import { PageManager } from '../../pages/page-manager';
 import { apiRequest } from '../../fixtures/api/plain-function';
 import {
@@ -155,4 +159,56 @@ export async function setAdminAccessToken(): Promise<void> {
         process.env.ADMIN_EMAIL!,
         process.env.ADMIN_PASSWORD!
     );
+}
+
+/**
+ * Returns how many seconds are left until a JWT expires, read from its
+ * `exp` claim (no request is made). A missing or unreadable token counts
+ * as already expired.
+ *
+ * @param {string | undefined} token - The access token.
+ * @returns {number} Seconds until expiry; 0 or less when expired.
+ */
+function secondsUntilExpiry(token: string | undefined): number {
+    const payloadPart = token?.split('.')[1];
+    if (!payloadPart) return 0;
+
+    const payload: unknown = JSON.parse(
+        Buffer.from(payloadPart, 'base64url').toString('utf8')
+    );
+    const exp =
+        typeof payload === 'object' &&
+        payload !== null &&
+        'exp' in payload &&
+        typeof payload.exp === 'number'
+            ? payload.exp
+            : 0;
+
+    return exp - Date.now() / 1000;
+}
+
+/**
+ * Re-publishes `process.env.ACCESS_TOKEN` / `process.env.ADMIN_ACCESS_TOKEN`
+ * when they expire soon. The API issues tokens valid for 5 minutes, so the
+ * tokens from `globalSetup` would expire during a longer run.
+ *
+ * Called by the auto fixtures in `fixtures/auth/token-fixture.ts` at worker
+ * start and before every test — each worker process keeps its own tokens.
+ *
+ * @returns {Promise<void>} Resolves when both tokens are valid for at least
+ *   `AuthRules.TOKEN_REFRESH_MARGIN_SECONDS`.
+ */
+export async function refreshAccessTokens(): Promise<void> {
+    if (
+        secondsUntilExpiry(process.env.ACCESS_TOKEN) <
+        AuthRules.TOKEN_REFRESH_MARGIN_SECONDS
+    ) {
+        await setUserAccessToken();
+    }
+    if (
+        secondsUntilExpiry(process.env.ADMIN_ACCESS_TOKEN) <
+        AuthRules.TOKEN_REFRESH_MARGIN_SECONDS
+    ) {
+        await setAdminAccessToken();
+    }
 }

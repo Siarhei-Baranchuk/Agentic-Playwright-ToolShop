@@ -199,3 +199,9 @@ export enum Co2Ratings {
     D = 'D',
     E = 'E',
 }
+
+/** API authentication rules */
+export enum AuthRules {
+    /** Re-login when an access token (JWT, 5-minute lifetime) expires within this many seconds */
+    TOKEN_REFRESH_MARGIN_SECONDS = 120,
+}

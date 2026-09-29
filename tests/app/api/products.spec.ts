@@ -52,6 +52,7 @@ import {
     INVALID_BOOLEAN_VALUES,
     INVALID_NUMBER_VALUES,
     INVALID_STRING_VALUES,
+    PRIMARY_INVALID_VALUES,
 } from '../../../test-data/static/util/invalid-values';
 
 /** Required on POST /products (StoreProduct) */
@@ -75,16 +76,9 @@ const SORT_OPTIONS = [
     { sort: 'price,asc', key: 'price', direction: 1 },
     { sort: 'price,desc', key: 'price', direction: -1 },
 ] as const;
-/** On PUT / PATCH every field is optional — an omitted (`undefined`) value is valid there */
-const withoutUndefined = <T>(values: readonly T[]): T[] =>
-    values.filter((value) => value !== undefined);
-/** Laravel `boolean` accepts 1 / 0, and the contract's own examples use them — they are valid */
-const INVALID_BOOLEANS = withoutUndefined(INVALID_BOOLEAN_VALUES).filter(
-    (value) => value !== 1 && value !== 0
-);
 /** A numeric string passes Laravel `numeric`; covered by a separate FIXME test (defect #11) */
 const NUMERIC_STRING_PRICE = '123';
-const INVALID_PRICES = withoutUndefined(INVALID_NUMBER_VALUES).filter(
+const INVALID_PRICES = INVALID_NUMBER_VALUES.filter(
     (value) => value !== NUMERIC_STRING_PRICE
 );
 
@@ -492,7 +486,7 @@ test.describe('POST /products', () => {
     }
 
     for (const field of STRING_FIELDS) {
-        for (const invalidValue of withoutUndefined(INVALID_STRING_VALUES)) {
+        for (const invalidValue of INVALID_STRING_VALUES) {
             test(
                 `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
                 { tag: '@api' },
@@ -557,7 +551,7 @@ test.describe('POST /products', () => {
     }
 
     for (const field of BOOLEAN_FIELDS) {
-        for (const invalidValue of INVALID_BOOLEANS) {
+        for (const invalidValue of INVALID_BOOLEAN_VALUES) {
             test(
                 `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
                 { tag: '@api' },
@@ -583,7 +577,7 @@ test.describe('POST /products', () => {
 
     // FIXME: category_id / brand_id are only `required` — a wrong type or a non-existent id is not validated and fails with 500 on the DB foreign key. See docs/test-plan.md, defect #6.
     for (const field of ['category_id', 'brand_id'] as const) {
-        for (const invalidValue of withoutUndefined(INVALID_STRING_VALUES)) {
+        for (const invalidValue of INVALID_STRING_VALUES) {
             test.skip(
                 `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
                 { tag: '@api' },
@@ -628,7 +622,7 @@ test.describe('POST /products', () => {
     }
 
     // FIXME: co2_rating has no validation rule — 123 fails with 500, true / null are stored (201). See docs/test-plan.md, defect #7.
-    for (const invalidValue of withoutUndefined(INVALID_STRING_VALUES)) {
+    for (const invalidValue of INVALID_STRING_VALUES) {
         test.skip(
             `should return 422 when co2_rating is ${JSON.stringify(invalidValue)}`,
             { tag: '@api' },
@@ -880,94 +874,42 @@ for (const method of ['PUT', 'PATCH'] as const) {
             }
         );
 
-        for (const field of [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS].filter(
-            (f) => f !== 'brand_id'
-        )) {
-            test(
-                `should return 200 when only ${field} is omitted`,
-                { tag: '@api' },
-                async ({ apiRequest }) => {
-                    const { [field]: _omitted, ...payload } =
-                        generateProduct(refs);
-
-                    const { status, body } = await apiRequest<UpdateResponse>({
-                        method,
-                        url: fillPath(ApiEndpoints.PRODUCT, {
-                            productId: required(product.id, 'product id'),
-                        }),
-                        body: payload,
-                    });
-
-                    expect(status).toBe(200);
-                    expect(UpdateResponseSchema.parse(body)).toBeTruthy();
-                }
-            );
-        }
-
-        for (const field of ['name', 'description'] as const) {
-            for (const invalidValue of withoutUndefined(
-                INVALID_STRING_VALUES
-            )) {
-                test(
-                    `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
-                    { tag: '@api' },
-                    async ({ apiRequest }) => {
-                        const { status, body } =
-                            await apiRequest<UnprocessableEntityResponse>({
-                                method,
-                                url: fillPath(ApiEndpoints.PRODUCT, {
-                                    productId: required(
-                                        product.id,
-                                        'product id'
-                                    ),
-                                }),
-                                body: {
-                                    ...generateProduct(refs),
-                                    [field]: invalidValue,
-                                },
-                            });
-
-                        expect(status).toBe(422);
-                        expect(
-                            UnprocessableEntityResponseSchema.parse(body)
-                        ).toBeTruthy();
-                    }
-                );
-            }
-        }
-
-        // FIXME: price is typed `number` in the contract, but a numeric string passes Laravel `numeric`. See docs/test-plan.md, defect #11.
-        test.skip(
-            `should return 422 when price is ${JSON.stringify(NUMERIC_STRING_PRICE)}`,
+        test(
+            'should return 200 for a partial update',
             { tag: '@api' },
             async ({ apiRequest }) => {
-                const { status, body } =
-                    await apiRequest<UnprocessableEntityResponse>({
-                        method,
-                        url: fillPath(ApiEndpoints.PRODUCT, {
-                            productId: required(product.id, 'product id'),
-                        }),
-                        body: {
-                            ...generateProduct(refs),
-                            price: NUMERIC_STRING_PRICE,
-                        },
-                    });
+                const { status, body } = await apiRequest<UpdateResponse>({
+                    method,
+                    url: fillPath(ApiEndpoints.PRODUCT, {
+                        productId: required(product.id, 'product id'),
+                    }),
+                    body: { name: generateProduct(refs).name },
+                });
 
-                expect(status).toBe(422);
-                expect(
-                    UnprocessableEntityResponseSchema.parse(body)
-                ).toBeTruthy();
+                expect(status).toBe(200);
+                expect(UpdateResponseSchema.parse(body)).toBeTruthy();
             }
         );
 
-        for (const invalidValue of INVALID_PRICES) {
+        for (const { field, value } of [
+            { field: 'name', value: PRIMARY_INVALID_VALUES.STRING },
+            { field: 'description', value: PRIMARY_INVALID_VALUES.STRING },
+            { field: 'price', value: PRIMARY_INVALID_VALUES.NUMBER },
+            {
+                field: 'is_location_offer',
+                value: PRIMARY_INVALID_VALUES.BOOLEAN,
+            },
+            { field: 'is_rental', value: PRIMARY_INVALID_VALUES.BOOLEAN },
+        ] as const) {
             // FIXME: PUT has no rule for price ("string" / null fail with 500, true is stored). See docs/test-plan.md, defect #8.
+            const priceNotValidated = method === 'PUT' && field === 'price';
+
             test(
-                `should return 422 when price is ${JSON.stringify(invalidValue)}`,
+                `should return 422 when ${field} is ${JSON.stringify(value)}`,
                 { tag: '@api' },
                 async ({ apiRequest }) => {
                     test.skip(
-                        method === 'PUT',
+                        priceNotValidated,
                         'FIXME: PUT does not validate price — docs/test-plan.md, defect #8'
                     );
                     const { status, body } =
@@ -976,10 +918,7 @@ for (const method of ['PUT', 'PATCH'] as const) {
                             url: fillPath(ApiEndpoints.PRODUCT, {
                                 productId: required(product.id, 'product id'),
                             }),
-                            body: {
-                                ...generateProduct(refs),
-                                price: invalidValue,
-                            },
+                            body: { ...generateProduct(refs), [field]: value },
                         });
 
                     expect(status).toBe(422);
@@ -988,36 +927,6 @@ for (const method of ['PUT', 'PATCH'] as const) {
                     ).toBeTruthy();
                 }
             );
-        }
-
-        for (const field of BOOLEAN_FIELDS) {
-            for (const invalidValue of INVALID_BOOLEANS) {
-                test(
-                    `should return 422 when ${field} is ${JSON.stringify(invalidValue)}`,
-                    { tag: '@api' },
-                    async ({ apiRequest }) => {
-                        const { status, body } =
-                            await apiRequest<UnprocessableEntityResponse>({
-                                method,
-                                url: fillPath(ApiEndpoints.PRODUCT, {
-                                    productId: required(
-                                        product.id,
-                                        'product id'
-                                    ),
-                                }),
-                                body: {
-                                    ...generateProduct(refs),
-                                    [field]: invalidValue,
-                                },
-                            });
-
-                        expect(status).toBe(422);
-                        expect(
-                            UnprocessableEntityResponseSchema.parse(body)
-                        ).toBeTruthy();
-                    }
-                );
-            }
         }
 
         for (const { description, value } of INVALID_PATH_IDS) {

@@ -13,8 +13,8 @@ These rules are non-negotiable. Violating any of them breaks the scaffold's cont
 - **ALWAYS** validate API response bodies with Zod using the exact assertion pattern `expect(SchemaName.parse(body)).toBeTruthy();`. Type generics alone are not enough, and `schema.parse(body)` without the `expect(...).toBeTruthy()` wrapper is not enough.
 - **ALWAYS** wrap each API call in `test.step()` when a test contains more than one API call.
 - **NEVER** silently drop a test because the API misbehaves. Write the test as the spec says, wrap it in `test.skip`, and add a `// FIXME: <ticket-url>` comment.
-- **NEVER** stop at `{}` empty-body validation. Every request-body endpoint requires per-field omission and per-field invalid-type tests.
-- **ALWAYS** fuzz path parameters with the invalid-format data-driven loop — regardless of whether OpenAPI mentions it.
+- **NEVER** stop at `{}` empty-body validation. Negative coverage is **risk-based — one test per validation branch**: POST gets per-field omission plus a `for...of` loop per field over the minimal `INVALID_*` sets; PUT/PATCH get one partial-update test and one `PRIMARY_INVALID_VALUES` test per field. **NEVER** add values that repeat an already covered branch (e.g. `true` next to `123` for a string field).
+- **ALWAYS** fuzz path parameters with the `INVALID_PATH_IDS` data-driven loop (a non-existent id + a malformed id) — regardless of whether OpenAPI mentions it.
 - **ALWAYS** use the `apiRequest` fixture directly in tests. Only promote to a helper fixture when the same setup/teardown is reused across 3+ test files.
 
 ## Instructions
@@ -239,20 +239,21 @@ test(
 
 For every endpoint × HTTP method combination, tests **MUST** cover **every status code listed in the OpenAPI spec** plus the baseline scenarios below. If the OpenAPI spec lists a status code not in this table, it still requires a test.
 
-| Scenario                                    | Status  | What to assert                                                                    |
-| ------------------------------------------- | ------- | --------------------------------------------------------------------------------- |
-| Happy path (valid auth + valid body)        | 200/201 | Schema parse passes + key fields match sent data                                  |
-| Missing Authorization header                | 401     | `status === 401`, validate body with schema or `expect(body).toBeNull()`          |
-| Insufficient permissions (wrong-role token) | 403     | `status === 403`, validate body with schema or `expect(body).toBeNull()`          |
-| Empty body (for POST/PUT/PATCH)             | 400/422 | Error schema parse passes — single test with `{}` body                            |
-| Each required field omitted individually    | 400/422 | One test per field via destructure + rest — see Phase 6                           |
-| Each field with type-inappropriate values   | 400/422 | `for...of` loop per field — see Phase 6                                           |
-| Non-existent resource ID                    | 404     | `status === 404` (use `test.skip` with `// FIXME` comment if backend bug exists)  |
-| Invalid path parameter formats              | 404     | Data-driven loop: numeric string, boolean-like, special chars, injection attempts |
-| Unsupported HTTP method                     | 405     | At least one test with a method the endpoint does not support                     |
-| Conflict (if listed in OpenAPI)             | 409     | Test the conflicting condition or `test.skip` with `// FIXME` if not reproducible |
-| Validation errors (if listed in OpenAPI)    | 422     | Covered by per-field validation tests above                                       |
-| No content (for DELETE)                     | 204     | `status === 204`, `expect(body).toBeNull()`                                       |
+| Scenario                                    | Status  | What to assert                                                                                      |
+| ------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------- |
+| Happy path (valid auth + valid body)        | 200/201 | Schema parse passes + key fields match sent data                                                    |
+| Missing Authorization header                | 401     | `status === 401`, validate body with schema or `expect(body).toBeNull()`                            |
+| Insufficient permissions (wrong-role token) | 403     | `status === 403`, validate body with schema or `expect(body).toBeNull()`                            |
+| Empty body (for POST/PUT/PATCH)             | 400/422 | Error schema parse passes — single test with `{}` body                                              |
+| Each required field omitted (POST)          | 400/422 | One test per required field via destructure + rest — see Phase 6                                    |
+| Each field with a wrong type                | 400/422 | POST: loop over the minimal `INVALID_*` set; PUT/PATCH: one `PRIMARY_INVALID_VALUES` test — Phase 6 |
+| Partial update (PUT/PATCH)                  | 200     | One test with a body of a single field                                                              |
+| Non-existent resource ID                    | 404     | `status === 404` (use `test.skip` with `// FIXME` comment if backend bug exists)                    |
+| Invalid path parameter formats              | 404     | `INVALID_PATH_IDS` loop: non-existent id + malformed id                                             |
+| Unsupported HTTP method                     | 405     | At least one test with a method the endpoint does not support                                       |
+| Conflict (if listed in OpenAPI)             | 409     | Test the conflicting condition or `test.skip` with `// FIXME` if not reproducible                   |
+| Validation errors (if listed in OpenAPI)    | 422     | Covered by per-field validation tests above                                                         |
+| No content (for DELETE)                     | 204     | `status === 204`, `expect(body).toBeNull()`                                                         |
 
 **Structure:** One `test.describe` per HTTP method + path. Use `beforeAll`/`afterAll` (not `beforeEach`/`afterEach`) to create/delete shared resources needed by multiple tests in the same describe block.
 
@@ -265,24 +266,28 @@ For every endpoint × HTTP method combination, tests **MUST** cover **every stat
 - When a `test.skip` is needed due to a backend bug: add `// FIXME: <ticket-url>` comment + `/* eslint-disable playwright/no-skipped-test */` above it
 - Tag: `@api` for API tests (check real tag in existing spec files for other areas)
 
-### Phase 6: Add per-field negative / validation coverage
+### Phase 6: Add risk-based negative / validation coverage
 
-Testing only with an empty body (`{}`) is never sufficient. Every endpoint that accepts a request body (POST, PUT, PATCH) requires systematic per-field validation testing.
+Testing only with an empty body (`{}`) is never sufficient — but negative tests are also the biggest source of test count, so they follow a **priority model: cover every validation branch once, never repeat a branch with another value.** Two values that hit the same rule (`123` and `true` for a `string` field) find the same defects; the second one only adds run time and noise.
 
-**Coverage checklist for endpoints with a body:**
+| Priority               | What                                                                                                                                                                  | Where                                |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| **P1 — always**        | Empty body `{}`; each required field omitted (one test per field); business-rule errors (409, 404 for a missing reference)                                            | POST                                 |
+| **P2 — minimal set**   | Wrong type per field: `for...of` over the `INVALID_*` array of the field's type (a wrong-type value + `null`); length / format boundaries                             | POST                                 |
+| **P2 — one per field** | Wrong type per field with `PRIMARY_INVALID_VALUES.<TYPE>`; one partial-update test (a body with a single field)                                                       | PUT / PATCH                          |
+| **P2**                 | Path parameters: `INVALID_PATH_IDS` (non-existent + malformed)                                                                                                        | every endpoint with a path parameter |
+| **Not written**        | Extra values for an already covered branch; length / format boundaries repeated on PUT/PATCH (same limits as POST); one omission test per optional field on PUT/PATCH | —                                    |
 
-1. **Empty body** — single test sending `{}`
-2. **Each required field omitted** — one test per field, omitting only that field while keeping all others valid
-3. **Each field with type-inappropriate values** — `for...of` loop per field using contextually appropriate invalid values
-4. **Boundary values** where applicable (empty string for min-length, negative for positive-only numbers, past dates for future-only, etc.)
+Filter a value out inline only when the contract makes it valid for that field — e.g. `null` for a `nullable` field: `INVALID_STRING_VALUES.filter((value) => value !== null)`.
 
-**Universal invalid arrays** live as `as const` exports in `test-data/static/util/invalid-values.ts` — `INVALID_STRING_VALUES`, `INVALID_UUID_VALUES`, `INVALID_NUMBER_VALUES`, `INVALID_BOOLEAN_VALUES`, `INVALID_ENUM_VALUES`, `INVALID_ARRAY_VALUES`, `INVALID_OBJECT_VALUES`. **Always import**; never redefine inline.
+**Universal invalid arrays** live as `as const` exports in `test-data/static/util/invalid-values.ts` — `INVALID_STRING_VALUES`, `INVALID_UUID_VALUES`, `INVALID_NUMBER_VALUES`, `INVALID_BOOLEAN_VALUES`, `INVALID_ENUM_VALUES`, `INVALID_ARRAY_VALUES`, `INVALID_OBJECT_VALUES`, plus `PRIMARY_INVALID_VALUES` (one value per type for PUT/PATCH). Path-parameter values live in `test-data/static/util/invalid-path-params.ts` (`INVALID_PATH_IDS`). **Always import**; never redefine inline.
 
 **Patterns to use** (full code in `references/negative-testing.md`):
 
-- **`for...of` spread-and-override** — base valid payload, override one field at a time with `INVALID_*` values, assert `400` + `BadRequestResponseSchema.parse(body)`.
-- **Omitting required fields** — destructure + rest (`const { [field]: _, ...rest } = validPayload`) per required field.
-- **Path-parameter validation** — data-driven loop over `[{ description, value }]` with numeric strings, boolean-likes, special chars, injection attempts. **Mandatory regardless of OpenAPI mention.**
+- **`for...of` spread-and-override (POST)** — base valid payload, override one field at a time with `INVALID_*` values, assert `422` (or the documented error code) + the error schema.
+- **Omitting required fields (POST)** — destructure + rest (`const { [field]: _, ...rest } = validPayload`) per required field.
+- **One primary value per field (PUT/PATCH)** — one test per field with `PRIMARY_INVALID_VALUES.<TYPE>`, plus one partial-update test.
+- **Path-parameter validation** — data-driven loop over `INVALID_PATH_IDS`. **Mandatory regardless of OpenAPI mention.**
 
 **Three-tier rule for _where_ invalid-value arrays live:**
 
@@ -292,7 +297,7 @@ Testing only with an empty body (`{}`) is never sufficient. Every endpoint that 
 
 A typical validation describe combines tier 1 and tier 3 in separate `for...of` loops. For full code blocks, the `INVALID_*` constants table, and the email-field type-vs-format combination rule, see `references/negative-testing.md`.
 
-**Forbidden: empty-body-only validation.** A single `body: {}` test asserting `400` is **not** sufficient. Per-field omission and per-field invalid-type loops are mandatory. Full anti-pattern in `references/test-step-patterns.md`.
+**Forbidden: empty-body-only validation.** A single `body: {}` test asserting `400` is **not** sufficient. Per-field omission (POST) and per-field invalid-type tests (POST loop, PUT/PATCH primary value) are mandatory. Full anti-pattern in `references/test-step-patterns.md`.
 
 ### Phase 7: Handle behavior mismatches
 

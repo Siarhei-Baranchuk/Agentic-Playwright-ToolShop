@@ -139,7 +139,10 @@ Non-blocking spec differences (tests follow the actual behaviour or are skipped)
 ### API completeness rules (from `api-testing`)
 
 - Every status code in the OpenAPI spec has its own test. When behaviour differs from the spec: `test.skip` + `// FIXME:`, the schema is never loosened.
-- Every request body field: a "field missing" loop + an "invalid type" loop.
+- Negative coverage is risk-based — one test per validation branch, never a second value for the same branch:
+    - POST: empty body, each required field missing, a `for...of` loop per field over the minimal `INVALID_*` sets (wrong type + `null`), length / format boundaries.
+    - PUT / PATCH: one partial-update test and one `PRIMARY_INVALID_VALUES` test per field.
+    - Path parameters: `INVALID_PATH_IDS` (non-existent id + malformed id).
 - Responses are validated with `z.strictObject` schemas built from `components.schemas`.
 - `QUERY` variants (`/products`, `/search`, `/tree`) get their own tests, including `415`.
 
@@ -228,7 +231,7 @@ Total ≈ 9 components and 33 pages.
 
 One spec per group: `products`, `product-specs`, `categories`, `brands`, `images`, `users`, `auth` (login/logout/refresh/me/forgot/change-password), `totp`, `favorites`, `carts`, `invoices`, `payment`, `messages`, `reports`, `postcode`, `sales-stream`.
 
-**API ≈ 311 status-code tests + ≈ 270 parameterised per-field negative cases ≈ 550–600.**
+**API ≈ 480 tests** (risk-based negative coverage; the full per-value matrix would be ≈ 550–600).
 
 ---
 
@@ -258,23 +261,23 @@ The estimate is agent working time (explore → code → run → debug), without
 | Iteration | Scope                                                                                                 | Operations / screens |  Tests ≈ |      Estimate |
 | --------- | ----------------------------------------------------------------------------------------------------- | -------------------: | -------: | ------------: |
 | 0         | Infrastructure: env, enums, admin auth, `apiRequest` extensions, base factories and helper fixtures   |                    — |        — |       0.5–1 h |
-| 1         | API: catalog (products, specs, categories, brands, images)                                            |               35 ops |     ~230 |         3–4 h |
-| 2         | API: users, auth, totp, favorites                                                                     |               20 ops |     ~150 |         2–3 h |
-| 3         | API: carts, invoices, payment, messages, reports, postcode, sales-stream                              |               33 ops |     ~200 |         3–4 h |
+| 1         | API: catalog (products, specs, categories, brands, images)                                            |               35 ops |      243 |         3–4 h |
+| 2         | API: users, auth, totp, favorites                                                                     |               20 ops |     ~100 |         2–3 h |
+| 3         | API: carts, invoices, payment, messages, reports, postcode, sales-stream                              |               33 ops |     ~140 |         3–4 h |
 | 4         | UI: shop (catalog, filters, detail, categories, rentals, comparison, contact, navigation, language)   |            9 screens |      ~60 |         3–4 h |
 | 5         | UI: auth and account (register, login, forgot, profile, password, 2FA, favorites, invoices, messages) |           10 screens |      ~50 |         3–4 h |
 | 6         | UI: checkout + geo/combination discount + chat + E2E                                                  |       4 steps + chat |      ~40 |         3–4 h |
 | 7         | UI: admin                                                                                             |           16 screens |      ~30 |         3–4 h |
-|           | **Total**                                                                                             |                      | **~750** | **≈ 20–28 h** |
+|           | **Total**                                                                                             |                      | **~660** | **≈ 20–28 h** |
 
-Expected full-suite run time locally (5 workers): API ≈ 3–5 min, UI ≈ 10–15 min.
+Expected full-suite run time locally (3 workers): API ≈ 1.5–2 min, UI ≈ 12–18 min.
 
 ### Status
 
-| Iteration | Result                                                                                                                          |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| 0         | Done                                                                                                                            |
-| 1         | Done — 396 API tests for 35 operations: 318 passing, 78 skipped with FIXME (defects #4–#14 and unreproducible documented codes) |
+| Iteration | Result                                                                                                                                                               |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0         | Done                                                                                                                                                                 |
+| 1         | Done — 243 API tests for 35 operations (reduced from 396 by the risk-based negative model): 195 passing, 48 skipped with FIXME; every defect #4–#14 still has a test |
 
 ---
 

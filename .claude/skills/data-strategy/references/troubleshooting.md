@@ -10,7 +10,7 @@
 **Cause:** The Faker defaults don't satisfy the Zod schema (missing field, wrong format, out-of-range number).
 **Fix:** Update the factory defaults to match the schema. Do **not** loosen the schema to accommodate the factory — the schema is the contract (see `api-testing` Phase 1 and 7).
 
-## I'm about to write `[123, true, null, undefined]` inline
+## I'm about to write `[123, null]` inline
 
 **Fix:** Stop. Import from `test-data/static/util/invalid-values.ts` (`INVALID_STRING_VALUES`, `INVALID_NUMBER_VALUES`, etc.). Only field-specific boundary arrays may stay inline (Tier 3).
 

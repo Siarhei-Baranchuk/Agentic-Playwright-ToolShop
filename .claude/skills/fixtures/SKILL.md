@@ -23,6 +23,7 @@ description: Playwright fixture conventions for the Playwright scaffold — depe
 fixtures/pom/test-options.ts              ← Single import point (merges all fixtures)
     ├── fixtures/pom/page-object-fixture.ts       ← `pm` fixture → pages/page-manager.ts (all page objects)
     ├── fixtures/api/api-request-fixture.ts       ← API request fixture (apiRequest for tests)
+    ├── fixtures/auth/token-fixture.ts           ← Auto fixtures: refresh ACCESS_TOKEN / ADMIN_ACCESS_TOKEN before they expire
     └── fixtures/helper/helper-fixture.ts         ← Setup/teardown fixtures (important recurring operations)
 ```
 
@@ -162,6 +163,7 @@ Order matters: code after `await use(...)` is the teardown. Do not teardown befo
 | `resetStorageState` | `page-object-fixture.ts` | Clears cookies and permissions (for login tests)                              |
 | `apiRequest`        | `api-request-fixture.ts` | Type-safe API request function (primary tool for API calls in tests)          |
 | `registeredUser`    | `helper-fixture.ts`      | Registers + logs in a unique user via API, deletes it after the test          |
+| `freshAccessTokens` | `token-fixture.ts`       | Auto: re-login when an API token expires soon (worker start + every test)     |
 
 ### `apiRequest` fixture vs. helper fixtures
 

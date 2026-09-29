@@ -12,7 +12,7 @@ This framework uses a **bifurcated data strategy**: static data for deterministi
 - **Static data files are TypeScript only.** Every file under `test-data/static/**` is a `.ts` file that exports `as const` literal values. **NEVER** use `.json`.
 - **Static data files may only export literal values.** No runtime imports (type-only imports are fine), no function definitions, no computed values, no Faker calls. Dynamic data belongs in factories, not in static files.
 - **NEVER** hardcode test content strings (names, emails, todo text, product names, descriptions, etc.) in a spec file. Generate with a Faker factory.
-- **NEVER** redefine universal type-mismatch arrays (`[123, true, null, undefined]`, etc.) inline. Import them from `test-data/static/util/invalid-values.ts`.
+- **NEVER** redefine universal type-mismatch arrays (`[123, null]`, etc.) inline. Import them from `test-data/static/util/invalid-values.ts`.
 - **ALWAYS** validate factory output with `Schema.parse(...)` and return the Zod-inferred type.
 - **NEVER** generate app-defined strings with Faker (error messages, button labels, page headers). Those live in `enums/` so they stay in sync with the application under test.
 - **NEVER** store fixed expected values that are used in a single assertion in a static data file. Keep them inline in the test.
@@ -96,14 +96,17 @@ Follow this when Phase 1 pointed at static data. Pick the right tier first.
 Do **not** create a new file. The universal arrays already live at `test-data/static/util/invalid-values.ts`:
 
 ```
-INVALID_STRING_VALUES   → [123, true, null, undefined]
-INVALID_NUMBER_VALUES   → ['string', '123', true, null, undefined]
-INVALID_BOOLEAN_VALUES  → ['yes', 1, 0, null, undefined]
-INVALID_UUID_VALUES     → ['not-a-uuid', '', 123, null, undefined]
-INVALID_ENUM_VALUES     → ['invalidValue', '', 123, null, undefined]
-INVALID_ARRAY_VALUES    → ['string', 123, null, undefined, {}]
-INVALID_OBJECT_VALUES   → ['string', 123, null, undefined, []]
+INVALID_STRING_VALUES   → [123, null]
+INVALID_NUMBER_VALUES   → ['string', '123', null]
+INVALID_BOOLEAN_VALUES  → ['yes', null]
+INVALID_UUID_VALUES     → ['not-a-uuid', null]
+INVALID_ENUM_VALUES     → ['invalidValue', null]
+INVALID_ARRAY_VALUES    → ['string', null]
+INVALID_OBJECT_VALUES   → ['string', null]
+PRIMARY_INVALID_VALUES  → { STRING: 123, NUMBER: 'string', BOOLEAN: 'yes', … }  (PUT/PATCH: one value per field)
 ```
+
+Each array holds **one value per validation branch** (wrong type + `null`) — do not add values that hit a branch already covered. Path-parameter values: `INVALID_PATH_IDS` in `test-data/static/util/invalid-path-params.ts`.
 
 Import and iterate in spec files; never redefine. See the `api-testing` skill (Phase 6) for the full consumer pattern.
 

@@ -22,7 +22,7 @@ Common pitfalls when using prompt templates from `common-tasks/SKILL.md`.
 **Cause:** The old pattern. Violates the `api-testing` Critical rule.
 **Fix:** Rewrite as `expect(SchemaName.parse(body)).toBeTruthy();` — the exact assertion is mandatory.
 
-## The generated API test redefines `[123, true, null, undefined]` inline
+## The generated API test redefines `[123, null]` inline
 
 **Cause:** Universal type-mismatch arrays were not imported.
 **Fix:** Delete the inline array and import from `test-data/static/util/invalid-values.ts` (`INVALID_STRING_VALUES`, `INVALID_NUMBER_VALUES`, etc.). Only field-specific boundary arrays may stay inline.

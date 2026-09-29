@@ -34,8 +34,11 @@ export default defineConfig({
     /* Retry on CI only */
     retries: process.env.CI ? 2 : 0,
 
-    /* Limit parallel workers on CI for stability */
-    workers: process.env.CI ? 1 : undefined,
+    /*
+     * Limit parallel workers: 1 on CI; 3 locally, because every test runs
+     * against the shared public demo server, which times out under heavier load
+     */
+    workers: process.env.CI ? 1 : 3,
 
     /* Reporter configuration */
     reporter: process.env.CI
@@ -90,6 +93,8 @@ export default defineConfig({
         {
             name: 'api',
             testMatch: /.*\/api\/.*\.spec\.ts/,
+            /* One retry locally: the shared demo server occasionally misses the request timeout */
+            retries: process.env.CI ? 2 : 1,
         },
 
         /* Main UI test project - Chrome, logged in as the customer */

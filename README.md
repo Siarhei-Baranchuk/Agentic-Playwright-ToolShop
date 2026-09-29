@@ -83,6 +83,7 @@ To add more environments, create `env/.env.<name>` and run with `ENVIRONMENT=<na
 │   ├── pom/test-options.ts    # Single import point for `test` and `expect`
 │   ├── pom/page-object-fixture.ts   # `pm` fixture (PageManager)
 │   ├── api/                   # apiRequest fixture + Zod schemas
+│   ├── auth/                  # Auto fixtures that keep API tokens fresh
 │   └── helper/                # Setup/teardown fixtures
 ├── helpers/
 │   ├── app/                   # Auth bootstrap, global setup
@@ -158,6 +159,7 @@ Defined in `playwright.config.ts`:
 
 - **Browser session** — created once by the `setup` project and reused by UI tests.
 - **API tokens** — `helpers/app/global-setup.ts` (Playwright `globalSetup`) logs in via API once, before any worker starts, and sets `process.env.ACCESS_TOKEN` (customer) and `process.env.ADMIN_ACCESS_TOKEN` (admin). They are available in every test and project.
+- **Token refresh** — API tokens live 5 minutes. The auto fixtures in `fixtures/auth/token-fixture.ts` re-login in each worker when a token is about to expire (checked from the JWT itself, at worker start and before every test), so long runs never hit expired tokens.
 - **Fresh user per test** — the `registeredUser` helper fixture registers a unique user via API, yields it with its token, and deletes it after the test. Use it for anything that changes user state instead of the shared demo accounts.
 
 ### Writing a test
@@ -282,6 +284,8 @@ Update major versions one package at a time and check their changelogs.
 ---
 
 ## Troubleshooting
+
+**Random `apiRequestContext.fetch: Timeout` failures** — the shared demo server is slow under load. Runs use 3 workers locally and the `api` project retries once; lower the load further with `--workers=1`.
 
 **All UI tests are skipped** — the `setup` project failed (wrong credentials or app unreachable). Run `npx playwright test --project=setup` and check `env/.env.dev`.
 
