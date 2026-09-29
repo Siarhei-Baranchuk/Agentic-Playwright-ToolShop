@@ -16,12 +16,24 @@ export const UnauthorizedResponseSchema = z.strictObject({
 });
 
 /**
- * 401 body of `POST /users/login` for rejected credentials.
- * FIXME: the spec documents only 200 for login; live shape
- * {"error": "Unauthorized"} / {"error": "Invalid login request"}.
+ * `{"error": "..."}` body used by the user, login and TOTP endpoints for
+ * 400 / 401 / 403 / 404 / 423 (e.g. "Unauthorized", "Account disabled",
+ * "You can only update your own data.").
+ * FIXME: the spec either documents no body for these codes or documents
+ * `{"message": ...}`; shape captured from live responses.
  */
-export const LoginErrorResponseSchema = z.strictObject({
+export const ErrorFieldResponseSchema = z.strictObject({
     error: z.string(),
+});
+
+/**
+ * `{"success": false, "message": "..."}` body of rejected operations
+ * (e.g. `POST /users/change-password` with a wrong current password).
+ * FIXME: not documented in the spec; shape captured live.
+ */
+export const OperationFailedResponseSchema = z.strictObject({
+    success: z.literal(false),
+    message: z.string(),
 });
 
 /**
@@ -78,7 +90,10 @@ export const UnprocessableEntityResponseSchema = z.record(
 
 // Type exports
 export type UnauthorizedResponse = zOutput<typeof UnauthorizedResponseSchema>;
-export type LoginErrorResponse = zOutput<typeof LoginErrorResponseSchema>;
+export type ErrorFieldResponse = zOutput<typeof ErrorFieldResponseSchema>;
+export type OperationFailedResponse = zOutput<
+    typeof OperationFailedResponseSchema
+>;
 export type ForbiddenResponse = zOutput<typeof ForbiddenResponseSchema>;
 export type ItemNotFoundResponse = zOutput<typeof ItemNotFoundResponseSchema>;
 export type ResourceNotFoundResponse = zOutput<

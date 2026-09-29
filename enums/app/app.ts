@@ -180,6 +180,8 @@ export enum UserRules {
     FIRST_NAME_MAX_LENGTH = 40,
     LAST_NAME_MAX_LENGTH = 20,
     PASSWORD_MIN_LENGTH = 8,
+    PHONE_MAX_LENGTH = 24,
+    EMAIL_MAX_LENGTH = 256,
 }
 
 /** Catalog validation rules — backend FormRequests (brand, category, product, product spec) */
@@ -204,4 +206,24 @@ export enum Co2Ratings {
 export enum AuthRules {
     /** Re-login when an access token (JWT, 5-minute lifetime) expires within this many seconds */
     TOKEN_REFRESH_MARGIN_SECONDS = 120,
+}
+
+/** API error / result messages — verified against the live API and the backend source */
+export enum ApiMessages {
+    UNAUTHORIZED = 'Unauthorized',
+    INVALID_LOGIN_REQUEST = 'Invalid login request',
+    ACCOUNT_LOCKED = 'Account locked, too many failed attempts. Please contact the administrator.',
+    ACCOUNT_DISABLED = 'Account disabled',
+    TOTP_REQUIRED = 'TOTP required',
+    INVALID_TOTP = 'Invalid TOTP',
+    UNAUTHORIZED_TOKEN_USAGE = 'Unauthorized token usage',
+    INVALID_OR_EXPIRED_TOKEN = 'Invalid or expired token',
+    TOTP_NOT_ALLOWED = 'TOTP cannot be set up for this account',
+    TOTP_ALREADY_ENABLED = 'TOTP already enabled',
+    TOTP_ENABLED = 'TOTP enabled successfully',
+    LOGGED_OUT = 'Successfully logged out',
+    WRONG_CURRENT_PASSWORD = 'Your current password does not matches with the password.',
+    SAME_NEW_PASSWORD = 'New Password cannot be same as your current password.',
+    ONLY_OWN_DATA = 'You can only update your own data.',
+    DUPLICATE_ENTRY = 'Duplicate Entry',
 }

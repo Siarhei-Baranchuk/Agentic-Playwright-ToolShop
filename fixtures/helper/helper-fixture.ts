@@ -1,16 +1,15 @@
-import { expect, test as base } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { apiRequest } from '../api/plain-function';
-import { ApiEndpoints } from '../../enums/app/app';
-import { fillPath } from '../../helpers/util/util';
-import { generateUserRegistration } from '../../test-data/factories/app/user.factory';
+import type {
+    ApiRequestFn,
+    ApiRequestParams,
+    ApiRequestResponse,
+} from '../api/api-types';
 import {
-    TokenResponse,
-    TokenResponseSchema,
-    User,
-    UserRequest,
-    UserSchema,
-} from '../api/schemas/app/userSchema';
-
+    deleteUser,
+    registerUser,
+    type RegisteredUser,
+} from '../../helpers/app/users';
 /**
  * Helper fixtures for important, recurring API-driven setup and teardown.
  *
@@ -65,14 +64,7 @@ import {
 
 // ==================== Types ====================
 
-/**
- * A freshly registered user: the registration payload (including the
- * plain-text password) plus the id assigned by the API and an access token.
- */
-export type RegisteredUser = UserRequest & {
-    id: string;
-    token: string;
-};
+export type { RegisteredUser };
 
 /**
  * Helper fixture type definitions.
@@ -92,69 +84,27 @@ export type HelperFixtures = {
 
 export const test = base.extend<HelperFixtures>({
     /**
-     * Registers and logs in a unique user, yields it, then deletes it.
+     * Registers and logs in a unique user, yields it, then deletes it
+     * (its favorites first, so a test that failed half-way leaves nothing behind).
      *
      * @param {APIRequestContext} request - Playwright request context (injected automatically).
      * @param {function} use - Playwright fixture lifecycle callback.
      */
     registeredUser: async ({ request }, use) => {
+        const api: ApiRequestFn = async <T = unknown>(
+            params: ApiRequestParams
+        ): Promise<ApiRequestResponse<T>> => {
+            const response = await apiRequest({ request, ...params });
+            return { ...response, body: response.body as T };
+        };
+
         // ── SETUP: Runs before the test ──────────────────────────────
-        const payload = generateUserRegistration();
-
-        const registration = await apiRequest({
-            request,
-            method: 'POST',
-            url: ApiEndpoints.REGISTER,
-            body: payload,
-        });
-        expect(registration.status).toBe(201);
-        expect(UserSchema.parse(registration.body)).toBeTruthy();
-        const { id } = registration.body as User;
-        if (!id) throw new Error('POST /users/register returned no user id');
-
-        const login = await apiRequest({
-            request,
-            method: 'POST',
-            url: ApiEndpoints.LOGIN,
-            body: { email: payload.email, password: payload.password },
-        });
-        expect(login.status).toBe(200);
-        expect(TokenResponseSchema.parse(login.body)).toBeTruthy();
+        const user = await registerUser(api);
 
         // ── YIELD: Passes data to the test ───────────────────────────
-        const user: RegisteredUser = {
-            ...payload,
-            id,
-            token: (login.body as TokenResponse).access_token,
-        };
         await use(user);
 
         // ── TEARDOWN: Runs after the test (even on failure) ──────────
-        // A user with favorites cannot be deleted (409), and a product in a
-        // favorites list cannot be deleted either — remove them first, so a
-        // test that failed half-way leaves nothing behind.
-        const favorites = await apiRequest({
-            request,
-            method: 'GET',
-            url: ApiEndpoints.FAVORITES,
-            headers: user.token,
-        });
-        expect(favorites.status).toBe(200);
-        for (const { id: favoriteId } of favorites.body as { id: string }[]) {
-            await apiRequest({
-                request,
-                method: 'DELETE',
-                url: fillPath(ApiEndpoints.FAVORITE, { favoriteId }),
-                headers: user.token,
-            });
-        }
-
-        const deletion = await apiRequest({
-            request,
-            method: 'DELETE',
-            url: fillPath(ApiEndpoints.USER, { userId: id }),
-            headers: process.env.ADMIN_ACCESS_TOKEN,
-        });
-        expect(deletion.status).toBe(204);
+        await deleteUser(api, user);
     },
 });

@@ -83,8 +83,45 @@ export const UserSchema = z.strictObject({
     created_at: z.string().optional(),
 });
 
+/** `PaginatedUserResponse` — `GET /users` (admin). */
+export const PaginatedUserSchema = z.strictObject({
+    current_page: z.int().optional(),
+    data: z.array(UserSchema).optional(),
+    from: z.int().optional(),
+    last_page: z.int().optional(),
+    per_page: z.int().optional(),
+    to: z.int().optional(),
+    total: z.int().optional(),
+});
+
+/** `GET|QUERY /users/search` — documented as an array of `UserResponse`. */
+export const UserListSchema = z.array(UserSchema);
+
+/** `LogoutResponse` — `GET /users/logout`. */
+export const LogoutResponseSchema = z.strictObject({
+    message: z.string().optional(),
+});
+
+/**
+ * `POST /users/login` for an account with TOTP enabled: a restricted token
+ * that must be exchanged together with a TOTP code.
+ * FIXME: not documented in the spec (login documents only TokenResponse);
+ * shape captured live and from the backend source.
+ */
+export const TotpRequiredLoginResponseSchema = z.strictObject({
+    message: z.string(),
+    requires_totp: z.literal(true),
+    access_token: z.string(),
+});
+
 // Type exports
 export type TokenResponse = zOutput<typeof TokenResponseSchema>;
 export type LoginRequest = zOutput<typeof LoginRequestSchema>;
 export type UserRequest = zOutput<typeof UserRequestSchema>;
 export type User = zOutput<typeof UserSchema>;
+export type PaginatedUsers = zOutput<typeof PaginatedUserSchema>;
+export type UserList = zOutput<typeof UserListSchema>;
+export type LogoutResponse = zOutput<typeof LogoutResponseSchema>;
+export type TotpRequiredLoginResponse = zOutput<
+    typeof TotpRequiredLoginResponseSchema
+>;

@@ -28,6 +28,18 @@ export const INVALID_EMAILS = [
     'user name@domain.com',
 ] as const;
 
+/**
+ * One password per rule of the registration / change-password policy
+ * (min 8 characters, mixed case, a number, a symbol) — each violates
+ * exactly one rule. Used by API negative tests.
+ */
+export const WEAK_PASSWORDS = [
+    { rule: 'shorter than 8 characters', value: 'Ab1!xyz' },
+    { rule: 'no mixed case', value: 'lowercase1!only' },
+    { rule: 'no number', value: 'NoNumbers!here' },
+    { rule: 'no symbol', value: 'NoSymbols123here' },
+] as const;
+
 export const INVALID_PASSWORDS = [
     '',
     '123',
