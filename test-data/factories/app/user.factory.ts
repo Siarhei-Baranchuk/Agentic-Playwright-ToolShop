@@ -4,6 +4,7 @@ import {
     UserRequestSchema,
 } from '../../../fixtures/api/schemas/app/userSchema';
 import { UserRules } from '../../../enums/app/app';
+import { FIVE_DIGIT_POSTCODE_COUNTRIES } from '../../static/app/checkout';
 
 /**
  * Generates a password that satisfies the app's password policy:
@@ -53,7 +54,7 @@ export const generateUserRegistration = (
             house_number: faker.location.buildingNumber(),
             city: faker.location.city(),
             state: faker.location.state(),
-            country: faker.location.countryCode('alpha-2'),
+            country: faker.helpers.arrayElement(FIVE_DIGIT_POSTCODE_COUNTRIES),
             postal_code: faker.string.numeric(5),
         },
         phone: faker.string.numeric(10),

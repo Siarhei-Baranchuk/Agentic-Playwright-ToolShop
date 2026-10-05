@@ -7,6 +7,9 @@
  * - `GEO_DISCOUNT_LOCATIONS` — cart coordinates that earn a location discount
  *   on location-offer products (CartService::calculateDiscountPercentage).
  * - `NO_DISCOUNT_LOCATION` — coordinates far from every discount city.
+ * - `FIVE_DIGIT_POSTCODE_COUNTRIES` — countries whose postcode format is five
+ *   digits, so a random 5-digit postcode passes the per-country format check
+ *   of user registration.
  *
  * Format: `.ts` with `as const` exports — literal values only.
  */
@@ -16,6 +19,14 @@ export const VALID_POSTCODE = {
     postcode: '1011AB',
     house_number: '1',
 } as const;
+
+export const FIVE_DIGIT_POSTCODE_COUNTRIES = [
+    'US',
+    'DE',
+    'FR',
+    'ES',
+    'IT',
+] as const;
 
 export const MISMATCHED_POSTCODE = {
     country: 'AT',

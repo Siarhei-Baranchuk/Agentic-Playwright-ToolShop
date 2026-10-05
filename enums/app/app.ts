@@ -25,6 +25,18 @@ export enum Messages {
     EMAIL_REQUIRED = 'Email is required',
     PASSWORD_REQUIRED = 'Password is required',
     EMAIL_FORMAT_INVALID = 'Email format is invalid',
+    PRODUCT_ADDED_TO_CART = 'Product added to shopping cart.',
+    FAVORITE_UNAUTHORIZED = 'Unauthorized, can not add product to your favorite list.',
+    NO_PRODUCTS_FOUND = 'There are no products found.',
+    SEARCHED_FOR = 'Searched for:',
+    OUT_OF_STOCK = 'Out of stock',
+    COMPARISON_EMPTY = 'No products selected for comparison. Add products from the overview page.',
+    CONTACT_SUCCESS = 'Thanks for your message! We will contact you shortly.',
+    SUBJECT_REQUIRED = 'Subject is required',
+    MESSAGE_REQUIRED = 'Message is required',
+    MESSAGE_TOO_SHORT = 'Message must be minimal 50 characters',
+    ATTACHMENT_NOT_TXT = 'File should have a txt extension.',
+    ATTACHMENT_NOT_EMPTY = 'File should be empty.',
 }
 
 /** UI route paths — taken from the Angular router of the live app */
@@ -289,4 +301,62 @@ export enum CheckoutRules {
 export enum SpecialProducts {
     /** At most one per cart */
     THOR_HAMMER = 'Thor Hammer',
+}
+
+/** UI languages — options of the language selector (lower-case codes are stored in localStorage) */
+export enum Languages {
+    DE = 'DE',
+    EL = 'EL',
+    EN = 'EN',
+    ES = 'ES',
+    FR = 'FR',
+    NL = 'NL',
+    TR = 'TR',
+}
+
+/** Navigation labels in German — verified on the live app */
+export enum GermanLabels {
+    HOME = 'Start',
+    CATEGORIES = 'Kategorien',
+    CONTACT = 'Kontakt',
+    SIGN_IN = 'Einloggen',
+}
+
+/** Seeded top-level categories (slug used in /category/:slug) */
+export enum SeedCategories {
+    HAND_TOOLS = 'Hand Tools',
+    POWER_TOOLS = 'Power Tools',
+    OTHER = 'Other',
+    SPECIAL_TOOLS = 'Special Tools',
+}
+
+/** Seeded sub-categories used by the filter tests */
+export enum SeedSubCategories {
+    SANDER = 'Sander',
+    DRILL = 'Drill',
+}
+
+/** Seeded brands — the demo shares data with other users, so only these are relied on */
+export enum SeedBrands {
+    FORGEFLEX = 'ForgeFlex Tools',
+    MIGHTYCRAFT = 'MightyCraft Hardware',
+}
+
+/** Catalog sort options: visible label of the "sort" select */
+export enum SortOptions {
+    NAME_ASC = 'Name (A - Z)',
+    NAME_DESC = 'Name (Z - A)',
+    PRICE_DESC = 'Price (High - Low)',
+    PRICE_ASC = 'Price (Low - High)',
+}
+
+/** UI headings and labels used to identify pages — verified on the live app */
+export enum PageHeadings {
+    CATEGORY_PREFIX = 'Category:',
+    RENTALS = 'Rentals',
+    COMPARISON = 'Product Comparison',
+    CONTACT = 'Contact',
+    PRIVACY = 'Privacy Policy for Toolshop',
+    SPECIFICATIONS = 'Specifications',
+    RELATED_PRODUCTS = 'Related products',
 }

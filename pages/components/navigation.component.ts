@@ -1,4 +1,5 @@
 import { Locator, Page } from '@playwright/test';
+import { Languages } from '../../enums/app/app';
 
 /**
  * Component Object for the main navigation bar.
@@ -24,7 +25,45 @@ export class NavigationComponent {
     // ==================== Locators ====================
 
     get container(): Locator {
-        return this.page.getByRole('navigation');
+        return this.page.getByRole('navigation').filter({
+            has: this.page.getByRole('menubar', { name: 'Main menu' }),
+        });
+    }
+
+    get mainMenu(): Locator {
+        return this.page.getByRole('menubar', { name: 'Main menu' });
+    }
+
+    get categoriesList(): Locator {
+        return this.page.getByRole('list', { name: 'nav-categories' });
+    }
+
+    get cartLink(): Locator {
+        return this.page.getByRole('link', { name: 'cart' });
+    }
+
+    get languageButton(): Locator {
+        return this.page.getByRole('button', { name: 'Select language' });
+    }
+
+    get footerPrivacyLink(): Locator {
+        return this.page
+            .getByRole('contentinfo')
+            .getByRole('link', { name: 'Privacy Policy' });
+    }
+
+    categoryLink(name: string): Locator {
+        return this.categoriesList.getByRole('link', { name, exact: true });
+    }
+
+    languageOption(language: Languages): Locator {
+        return this.page
+            .getByRole('menu', { name: 'Select language' })
+            .getByRole('menuitem', { name: language, exact: true });
+    }
+
+    menuLink(name: string): Locator {
+        return this.mainMenu.getByRole('link', { name, exact: true });
     }
 
     get homeLink(): Locator {
@@ -80,6 +119,28 @@ export class NavigationComponent {
      */
     async openCategories(): Promise<void> {
         await this.categoriesButton.click();
+    }
+
+    /**
+     * Opens a category from the "Categories" dropdown.
+     *
+     * @param {string} name - The category (or "Rentals") link text.
+     * @returns {Promise<void>} Resolves when the link is clicked.
+     */
+    async openCategory(name: string): Promise<void> {
+        await this.openCategories();
+        await this.categoryLink(name).click();
+    }
+
+    /**
+     * Switches the UI language.
+     *
+     * @param {Languages} language - The language code shown in the selector.
+     * @returns {Promise<void>} Resolves when the option is clicked.
+     */
+    async selectLanguage(language: Languages): Promise<void> {
+        await this.languageButton.click();
+        await this.languageOption(language).click();
     }
 
     /**
