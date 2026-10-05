@@ -73,3 +73,38 @@ export function required<T>(value: T | null | undefined, label: string): T {
     }
     return value;
 }
+
+/** One event of a Server-Sent Events stream. */
+export type SseEvent = {
+    id?: string;
+    event?: string;
+    data?: string;
+};
+
+/**
+ * Parses a Server-Sent Events body (`text/event-stream`) into its events.
+ * Comment lines (`: ...`) and `retry:` fields are ignored.
+ *
+ * @param {string} text - The raw stream body.
+ * @returns {SseEvent[]} The events, in order.
+ *
+ * @example
+ * ```ts
+ * const sales = parseSseEvents(body).filter(({ event }) => event === 'sale');
+ * ```
+ */
+export function parseSseEvents(text: string): SseEvent[] {
+    return text
+        .split(/\n\n+/)
+        .map((block) => {
+            const event: SseEvent = {};
+            for (const line of block.split('\n')) {
+                const [, field, value] =
+                    /^(id|event|data): ?(.*)$/.exec(line) ?? [];
+                if (field === 'id' || field === 'event' || field === 'data')
+                    event[field] = value;
+            }
+            return event;
+        })
+        .filter((event) => Object.keys(event).length > 0);
+}

@@ -109,3 +109,14 @@ export type ConflictResponse = zOutput<typeof ConflictResponseSchema>;
 export type UnprocessableEntityResponse = zOutput<
     typeof UnprocessableEntityResponseSchema
 >;
+
+/**
+ * `{"message": "..."}` body of a 422 raised by a controller, not by field
+ * validation (e.g. `GET /postcode-lookup` with a postcode that does not fit
+ * the country). FIXME: the spec documents no body for this 422; shape captured live.
+ */
+export const MessageResponseSchema = z.strictObject({
+    message: z.string(),
+});
+
+export type MessageResponse = zOutput<typeof MessageResponseSchema>;

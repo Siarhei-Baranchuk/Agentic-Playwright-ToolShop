@@ -320,6 +320,7 @@ test.skip(
 ```
 
 4. **Never adjust the expected status code to match buggy behavior.** The test documents the contract, not the current bug.
+    - **Exception — undocumented extra fields.** If the only mismatch is that a response carries fields the contract does not declare (e.g. `payment` on an invoice), add exactly those fields to the schema as `.optional()`, each marked `// FIXME: undocumented — see defect #N`, and log the defect. Documented fields keep their contract types; never widen a type or add `.nullable()` to pass, and keep `z.strictObject()` so any further unknown field still fails. A body with a _different_ shape than documented (not just extra fields) is still a `test.skip` + FIXME case.
 5. **If the API returns a different valid status code than the spec** (e.g., 422 instead of 400), use the actual status code and add a comment noting the spec discrepancy.
 
 ### Phase 8: (When needed) Promote to a helper fixture

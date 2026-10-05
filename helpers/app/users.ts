@@ -69,7 +69,9 @@ export async function registerUser(
 
 /**
  * Deletes a user as the admin. Its favorites are removed first — a user
- * with favorites cannot be deleted (409). Uses the user's own token for
+ * with favorites cannot be deleted (409). A user that owns invoices or
+ * contact messages cannot be deleted at all (the API has no way to delete
+ * those), so 409 is accepted and the user is left to the hourly DB reset. Uses the user's own token for
  * that, so pass a token that is still valid.
  *
  * @param {ApiRequestFn} apiRequest - The `apiRequest` fixture (or an equivalent function).
@@ -107,7 +109,9 @@ export async function deleteUser(
         url: fillPath(ApiEndpoints.USER, { userId: user.id }),
         headers: process.env.ADMIN_ACCESS_TOKEN,
     });
-    expect(deletion.status).toBe(204);
+    // 409: the user owns invoices or contact messages, which the API cannot
+    // delete — such users stay until the hourly reset of the demo database.
+    expect([204, 409]).toContain(deletion.status);
 }
 
 /**

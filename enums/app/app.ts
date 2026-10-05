@@ -226,4 +226,67 @@ export enum ApiMessages {
     SAME_NEW_PASSWORD = 'New Password cannot be same as your current password.',
     ONLY_OWN_DATA = 'You can only update your own data.',
     DUPLICATE_ENTRY = 'Duplicate Entry',
+    ITEM_ADDED = 'item added or updated',
+    CART_NOT_FOUND = 'Cart not found',
+    ONE_THOR_HAMMER = 'You can only have one Thor Hammer in the cart.',
+    PAYMENT_SUCCESSFUL = 'Payment was successful',
+    PDF_NOT_INITIATED = 'NOT_INITIATED',
+    PDF_NOT_CREATED = 'Document not created. Try again later.',
+    INVOICE_NOT_FOUND = 'Invoice not found',
+    FILE_NOT_EMPTY = 'Currently we only allow empty files.',
+    FILE_NOT_TXT = 'The file extension is incorrect, we only accept txt files.',
+    FILE_MISSING = 'No file attached.',
+    POSTCODE_FORMAT_INVALID = 'The postal code format is not valid for the selected country.',
+}
+
+/** Payment methods — `payment_method` enum of the OpenAPI `InvoiceRequest` / `PaymentRequest` */
+export enum PaymentMethods {
+    BANK_TRANSFER = 'bank-transfer',
+    CASH_ON_DELIVERY = 'cash-on-delivery',
+    CREDIT_CARD = 'credit-card',
+    BUY_NOW_PAY_LATER = 'buy-now-pay-later',
+    GIFT_CARD = 'gift-card',
+}
+
+/** Invoice (order) statuses — `InvoiceStatusRequest` enum of the OpenAPI contract */
+export enum InvoiceStatuses {
+    AWAITING_FULFILLMENT = 'AWAITING_FULFILLMENT',
+    ON_HOLD = 'ON_HOLD',
+    AWAITING_SHIPMENT = 'AWAITING_SHIPMENT',
+    SHIPPED = 'SHIPPED',
+    COMPLETED = 'COMPLETED',
+}
+
+/** Contact message statuses — `ContactStatusRequest` enum of the OpenAPI contract */
+export enum ContactStatuses {
+    NEW = 'NEW',
+    ON_HOLD = 'ON_HOLD',
+    IN_PROGRESS = 'IN_PROGRESS',
+    RESOLVED = 'RESOLVED',
+}
+
+/** Contact form subjects — option values of the live contact form */
+export enum ContactSubjects {
+    CUSTOMER_SERVICE = 'customer-service',
+    WEBMASTER = 'webmaster',
+    RETURN = 'return',
+    PAYMENTS = 'payments',
+    WARRANTY = 'warranty',
+    STATUS_OF_ORDER = 'status-of-order',
+}
+
+/** Checkout business rules — backend CartService / InvoiceService / controllers */
+export enum CheckoutRules {
+    /** Extra discount when a cart holds both rental and non-rental items */
+    COMBINATION_DISCOUNT_PERCENTAGE = 15,
+    /** Extra discount when more than half of the items are eco-friendly (CO₂ A/B) */
+    ECO_DISCOUNT_PERCENTAGE = 5,
+    CART_MAX_QUANTITY = 99,
+    CONTACT_MESSAGE_MAX_LENGTH = 250,
+}
+
+/** Seed products with special cart rules */
+export enum SpecialProducts {
+    /** At most one per cart */
+    THOR_HAMMER = 'Thor Hammer',
 }
