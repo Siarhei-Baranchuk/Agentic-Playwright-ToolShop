@@ -10,7 +10,6 @@ import {
     AddContactMessageSchema,
     ContactMessage,
     ContactMessageAuthenticated,
-    ContactMessageAuthenticatedSchema,
     ContactMessageDetail,
     ContactMessageDetailSchema,
     ContactMessageSchema,
@@ -37,9 +36,9 @@ import {
     UnprocessableEntityResponse,
     UnprocessableEntityResponseSchema,
 } from '../../../fixtures/api/schemas/util/errorResponseSchema';
-import type { ApiRequestFn } from '../../../fixtures/api/api-types';
 import { expect, test } from '../../../fixtures/pom/test-options';
 import {
+    sendMessage,
     deleteUser,
     registerUser,
     type RegisteredUser,
@@ -51,29 +50,6 @@ import { INVALID_PATH_IDS } from '../../../test-data/static/util/invalid-path-pa
 import { INVALID_STRING_VALUES } from '../../../test-data/static/util/invalid-values';
 
 const REQUIRED_FIELDS = ['subject', 'message'] as const;
-
-/**
- * Sends a contact message as a logged-in user via `POST /messages`.
- *
- * @param {ApiRequestFn} apiRequest - The `apiRequest` fixture.
- * @param {string} token - The user's access token.
- * @returns {Promise<ContactMessageAuthenticated>} The stored message.
- */
-async function sendMessage(
-    apiRequest: ApiRequestFn,
-    token: string
-): Promise<ContactMessageAuthenticated> {
-    const { name: _name, email: _email, ...payload } = generateContactMessage();
-    const { status, body } = await apiRequest<ContactMessageAuthenticated>({
-        method: 'POST',
-        url: ApiEndpoints.MESSAGES,
-        headers: token,
-        body: payload,
-    });
-    expect(status).toBe(200);
-    expect(ContactMessageAuthenticatedSchema.parse(body)).toBeTruthy();
-    return body;
-}
 
 test.describe('messages', () => {
     /** A customer whose message the others must not reach */

@@ -2,6 +2,12 @@ import { expect } from '@playwright/test';
 import { ApiEndpoints } from '../../enums/app/app';
 import type { ApiRequestFn } from '../../fixtures/api/api-types';
 import {
+    ContactMessageAuthenticated,
+    ContactMessageAuthenticatedSchema,
+} from '../../fixtures/api/schemas/app/contactSchema';
+import {
+    Favorite,
+    FavoriteSchema,
     FavoriteWithProductList,
     FavoriteWithProductListSchema,
 } from '../../fixtures/api/schemas/app/favoriteSchema';
@@ -18,6 +24,7 @@ import {
     UserRequest,
     UserSchema,
 } from '../../fixtures/api/schemas/app/userSchema';
+import { generateContactMessage } from '../../test-data/factories/app/checkout.factory';
 import { generateUserRegistration } from '../../test-data/factories/app/user.factory';
 import { generateTotpCode } from '../util/totp';
 import { fillPath, required } from '../util/util';
@@ -145,4 +152,52 @@ export async function enableTotp(
     expect(TotpVerifyResponseSchema.parse(verify.body)).toBeTruthy();
 
     return secret;
+}
+
+/**
+ * Adds a product to the user's favorites via `POST /favorites`.
+ *
+ * @param {ApiRequestFn} apiRequest - The `apiRequest` fixture (or an equivalent function).
+ * @param {string} token - The user's access token.
+ * @param {string} productId - The product to add.
+ * @returns {Promise<Favorite>} The created favorite.
+ */
+export async function addFavorite(
+    apiRequest: ApiRequestFn,
+    token: string,
+    productId: string
+): Promise<Favorite> {
+    const { status, body } = await apiRequest<Favorite>({
+        method: 'POST',
+        url: ApiEndpoints.FAVORITES,
+        headers: token,
+        body: { product_id: productId },
+    });
+    expect(status).toBe(201);
+    expect(FavoriteSchema.parse(body)).toBeTruthy();
+    return body;
+}
+
+/**
+ * Sends a contact message as a logged-in user via `POST /messages`.
+ * A user who owns a message can no longer be deleted (see `deleteUser`).
+ *
+ * @param {ApiRequestFn} apiRequest - The `apiRequest` fixture (or an equivalent function).
+ * @param {string} token - The user's access token.
+ * @returns {Promise<ContactMessageAuthenticated>} The stored message.
+ */
+export async function sendMessage(
+    apiRequest: ApiRequestFn,
+    token: string
+): Promise<ContactMessageAuthenticated> {
+    const { name: _name, email: _email, ...payload } = generateContactMessage();
+    const { status, body } = await apiRequest<ContactMessageAuthenticated>({
+        method: 'POST',
+        url: ApiEndpoints.MESSAGES,
+        headers: token,
+        body: payload,
+    });
+    expect(status).toBe(200);
+    expect(ContactMessageAuthenticatedSchema.parse(body)).toBeTruthy();
+    return body;
 }

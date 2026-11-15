@@ -1,5 +1,5 @@
 import { Locator, Page } from '@playwright/test';
-import { Languages } from '../../enums/app/app';
+import { AccountMenuItems, Languages } from '../../enums/app/app';
 
 /**
  * Component Object for the main navigation bar.
@@ -92,6 +92,11 @@ export class NavigationComponent {
         return this.page.getByTestId('nav-sign-out');
     }
 
+    // Link inside the user dropdown (hidden until the menu opens)
+    accountMenuLink(item: AccountMenuItems): Locator {
+        return this.page.getByRole('link', { name: item, exact: true });
+    }
+
     // ==================== Actions ====================
 
     /**
@@ -150,6 +155,17 @@ export class NavigationComponent {
      */
     async openUserMenu(): Promise<void> {
         await this.userMenu.click();
+    }
+
+    /**
+     * Opens an account section from the user dropdown.
+     *
+     * @param {AccountMenuItems} item - The dropdown entry.
+     * @returns {Promise<void>} Resolves when the entry is clicked.
+     */
+    async openAccountMenuItem(item: AccountMenuItems): Promise<void> {
+        await this.openUserMenu();
+        await this.accountMenuLink(item).click();
     }
 
     /**

@@ -1,7 +1,9 @@
 import { expect, request, type Page } from '@playwright/test';
 import {
     ApiEndpoints,
+    AppRoutes,
     AuthRules,
+    BrowserStorageKeys,
     StorageStatePaths,
 } from '../../enums/app/app';
 import { PageManager } from '../../pages/page-manager';
@@ -79,6 +81,34 @@ export async function createAdminStorageState(page: Page): Promise<void> {
         process.env.ADMIN_PASSWORD!,
         StorageStatePaths.ADMIN
     );
+}
+
+/**
+ * Starts a browser session for a user who is already logged in via the API:
+ * opens the app and stores the access token where the app keeps it
+ * (`localStorage`), so the next navigation renders the user as signed in.
+ * Much faster than a UI login; use it in tests whose subject is not the
+ * login form itself. Use it in a guest context (empty storage state).
+ *
+ * @param {Page} page - The Playwright page fixture.
+ * @param {string} token - The user's API access token (e.g. `registeredUser.token`).
+ * @returns {Promise<void>} Resolves when the token is stored.
+ *
+ * @example
+ * ```ts
+ * await startBrowserSession(page, registeredUser.token);
+ * await pm.profilePage.open();
+ * ```
+ */
+export async function startBrowserSession(
+    page: Page,
+    token: string
+): Promise<void> {
+    await page.goto(`${process.env.APP_URL!}${AppRoutes.PRIVACY}`);
+    await page.evaluate(([key, value]) => localStorage.setItem(key, value), [
+        BrowserStorageKeys.AUTH_TOKEN,
+        token,
+    ] as const);
 }
 
 /**

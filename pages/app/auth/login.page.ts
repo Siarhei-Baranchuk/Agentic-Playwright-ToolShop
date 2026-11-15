@@ -1,15 +1,9 @@
 import { Locator, Page } from '@playwright/test';
-import { AppRoutes, Messages } from '../../enums/app/app';
+import { AppRoutes, Messages, PageHeadings } from '../../../enums/app/app';
 
 /**
- * Page Object for the login page.
- *
- * Demonstrates the recommended locator priority:
- * 1. getByRole() - Accessibility-based (most recommended)
- * 2. getByLabel() - Form labels
- * 3. getByPlaceholder() - Placeholder text
- * 4. getByText() - Text content
- * 5. getByTestId() - Test IDs (fallback when semantic locators aren't possible)
+ * Page Object for the login page (`/auth/login`), including the TOTP step
+ * that replaces the form for users with two-factor authentication.
  *
  * Accessed in tests through the page manager: `pm.loginPage`.
  */
@@ -19,7 +13,7 @@ export class LoginPage {
     // ==================== Locators ====================
 
     get heading(): Locator {
-        return this.page.getByRole('heading', { name: 'Login' });
+        return this.page.getByRole('heading', { name: PageHeadings.LOGIN });
     }
 
     get emailInput(): Locator {
@@ -32,6 +26,26 @@ export class LoginPage {
 
     get loginButton(): Locator {
         return this.page.getByRole('button', { name: 'Login' });
+    }
+
+    get googleSignInButton(): Locator {
+        return this.page.getByRole('button', { name: 'Sign in with Google' });
+    }
+
+    get registerLink(): Locator {
+        return this.page.getByRole('link', { name: 'Register your account' });
+    }
+
+    get forgotPasswordLink(): Locator {
+        return this.page.getByRole('link', { name: 'Forgot your Password?' });
+    }
+
+    get totpInput(): Locator {
+        return this.page.getByRole('textbox', { name: 'TOTP Code' });
+    }
+
+    get verifyTotpButton(): Locator {
+        return this.page.getByRole('button', { name: 'Verify TOTP' });
     }
 
     // ==================== Feedback Locators ====================
@@ -50,6 +64,14 @@ export class LoginPage {
 
     get emailFormatError(): Locator {
         return this.page.getByText(Messages.EMAIL_FORMAT_INVALID);
+    }
+
+    get accountLockedError(): Locator {
+        return this.page.getByText(Messages.ACCOUNT_LOCKED);
+    }
+
+    get invalidTotpError(): Locator {
+        return this.page.getByText(Messages.INVALID_TOTP, { exact: true });
     }
 
     // ==================== Actions ====================
@@ -89,5 +111,17 @@ export class LoginPage {
         await this.passwordInput.fill(password);
 
         await this.loginButton.click();
+    }
+
+    /**
+     * Submits a code on the TOTP step shown after the password for users
+     * with two-factor authentication.
+     *
+     * @param {string} code - The 6-digit TOTP code.
+     * @returns {Promise<void>} Resolves when the code is submitted.
+     */
+    async verifyTotp(code: string): Promise<void> {
+        await this.totpInput.fill(code);
+        await this.verifyTotpButton.click();
     }
 }

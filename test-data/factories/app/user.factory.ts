@@ -4,6 +4,9 @@ import {
     UserRequestSchema,
 } from '../../../fixtures/api/schemas/app/userSchema';
 import { UserRules } from '../../../enums/app/app';
+import type { RegistrationDetails } from '../../../pages/app/auth/register.page';
+import { required } from '../../../helpers/util/util';
+import { REGISTRATION_COUNTRY } from '../../static/app/auth';
 import { FIVE_DIGIT_POSTCODE_COUNTRIES } from '../../static/app/checkout';
 
 /**
@@ -79,6 +82,46 @@ export const generateUserRegistration = (
 
     return UserRequestSchema.parse({ ...defaultUser, ...overrides });
 };
+
+/**
+ * Generates values for the UI registration form. Built on
+ * `generateUserRegistration`, so the data passes the same API rules; the
+ * country is `REGISTRATION_COUNTRY`, whose postcode lookup fills the street,
+ * city and state.
+ *
+ * @param {Partial<RegistrationDetails>} overrides - Optional fields to override the generated values.
+ * @returns {RegistrationDetails} Valid registration form values.
+ */
+export const generateRegistrationDetails = (
+    overrides?: Partial<RegistrationDetails>
+): RegistrationDetails => {
+    const user = generateUserRegistration();
+
+    return {
+        firstName: user.first_name,
+        lastName: user.last_name,
+        dob: required(user.dob, 'dob'),
+        country: REGISTRATION_COUNTRY.label,
+        postalCode: faker.string.numeric(5),
+        houseNumber: faker.location.buildingNumber(),
+        phone: required(user.phone, 'phone'),
+        email: user.email,
+        password: user.password,
+        ...overrides,
+    };
+};
+
+/**
+ * Generates a date of birth (YYYY-MM-DD) of a person younger than the
+ * minimum customer age.
+ *
+ * @returns {string} A date of birth below `UserRules.MIN_AGE`.
+ */
+export const generateUnderageDob = (): string =>
+    faker.date
+        .birthdate({ mode: 'age', min: 10, max: UserRules.MIN_AGE - 1 })
+        .toISOString()
+        .slice(0, 10);
 
 /**
  * Generates login credentials for testing purposes.

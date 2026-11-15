@@ -110,6 +110,18 @@ export class ProductDetailPage {
             .filter({ hasText: Messages.FAVORITE_UNAUTHORIZED });
     }
 
+    get favouriteAddedMessage(): Locator {
+        return this.page
+            .getByRole('alert')
+            .filter({ hasText: Messages.FAVORITE_ADDED });
+    }
+
+    get favouriteAlreadyAddedMessage(): Locator {
+        return this.page
+            .getByRole('alert')
+            .filter({ hasText: Messages.FAVORITE_ALREADY_ADDED });
+    }
+
     get outOfStockLabel(): Locator {
         return this.page.getByText(Messages.OUT_OF_STOCK, { exact: true });
     }

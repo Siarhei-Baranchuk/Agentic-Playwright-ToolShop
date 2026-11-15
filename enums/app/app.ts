@@ -37,6 +37,44 @@ export enum Messages {
     MESSAGE_TOO_SHORT = 'Message must be minimal 50 characters',
     ATTACHMENT_NOT_TXT = 'File should have a txt extension.',
     ATTACHMENT_NOT_EMPTY = 'File should be empty.',
+
+    // Registration
+    FIRST_NAME_REQUIRED = 'First name is required',
+    LAST_NAME_REQUIRED = 'Last name is required',
+    DOB_REQUIRED = 'Date of Birth is required',
+    COUNTRY_REQUIRED = 'Country is required',
+    POSTCODE_REQUIRED = 'Postcode is required',
+    HOUSE_NUMBER_REQUIRED = 'House number is required',
+    STREET_REQUIRED = 'Street is required',
+    CITY_REQUIRED = 'City is required',
+    STATE_REQUIRED = 'State is required',
+    PHONE_REQUIRED = 'Phone is required.',
+    PHONE_DIGITS_ONLY = 'Only numbers are allowed.',
+    PASSWORD_TOO_SHORT = 'Password must be minimal 6 characters long.',
+    EMAIL_ALREADY_EXISTS = 'A customer with this email address already exists.',
+    CUSTOMER_UNDERAGE = 'Customer must be 18 years old.',
+
+    // Login
+    ACCOUNT_LOCKED = 'Account locked, too many failed attempts. Please contact the administrator.',
+    INVALID_TOTP = 'Invalid TOTP',
+
+    // Forgot password
+    FORGOT_PASSWORD_UNKNOWN_EMAIL = 'The selected email is invalid.',
+
+    // Account
+    NO_FAVORITES = 'There are no favorites yet.',
+    NO_MESSAGES = 'There are no messages yet.',
+    FAVORITE_ADDED = 'Product added to your favorites list.',
+    FAVORITE_ALREADY_ADDED = 'Product already in your favorites list.',
+    PROFILE_UPDATED = 'Your profile is successfully updated!',
+    PROFILE_INVALID = 'Please correct the highlighted fields before saving.',
+    PASSWORD_UPDATED = 'Your password is successfully updated!',
+    WRONG_CURRENT_PASSWORD = 'Your current password does not matches with the password.',
+    SAME_NEW_PASSWORD = 'New Password cannot be same as your current password.',
+    PASSWORD_CONFIRMATION_MISMATCH = 'The new password field confirmation does not match.',
+    NEW_PASSWORD_NO_MIXED_CASE = 'The new password field must contain at least one uppercase and one lowercase letter.',
+    TOTP_ENABLED = 'TOTP verified and enabled successfully.',
+    TOTP_SETUP_INVALID = 'Invalid TOTP code. Please try again.',
 }
 
 /** UI route paths — taken from the Angular router of the live app */
@@ -260,6 +298,11 @@ export enum PaymentMethods {
     GIFT_CARD = 'gift-card',
 }
 
+/** Payment method names as the UI shows them — verified on the live invoice page (more are added with the checkout tests) */
+export enum PaymentMethodLabels {
+    CASH_ON_DELIVERY = 'Cash on Delivery',
+}
+
 /** Invoice (order) statuses — `InvoiceStatusRequest` enum of the OpenAPI contract */
 export enum InvoiceStatuses {
     AWAITING_FULFILLMENT = 'AWAITING_FULFILLMENT',
@@ -359,4 +402,51 @@ export enum PageHeadings {
     PRIVACY = 'Privacy Policy for Toolshop',
     SPECIFICATIONS = 'Specifications',
     RELATED_PRODUCTS = 'Related products',
+    LOGIN = 'Login',
+    REGISTER = 'Customer registration',
+    FORGOT_PASSWORD = 'Forgot Password',
+    MY_ACCOUNT = 'My account',
+    PROFILE = 'Profile',
+    FAVORITES = 'Favorites',
+    INVOICES = 'Invoices',
+    MESSAGES = 'Messages',
+    REPLIES = 'Replies',
+}
+
+/** Password strength levels shown under the password fields (lowest first) — verified on the live app */
+export enum PasswordStrengths {
+    WEAK = 'Weak',
+    MODERATE = 'Moderate',
+    STRONG = 'Strong',
+    VERY_STRONG = 'Very Strong',
+    EXCELLENT = 'Excellent',
+}
+
+/** Account menu entries — links of the logged-in user dropdown and the account overview */
+export enum AccountMenuItems {
+    MY_ACCOUNT = 'My account',
+    MY_FAVORITES = 'My favorites',
+    MY_PROFILE = 'My profile',
+    MY_INVOICES = 'My invoices',
+    MY_MESSAGES = 'My messages',
+}
+
+/** Shortcut tiles of the account overview, by their `data-test` id (the tiles have no accessible name) */
+export enum AccountTiles {
+    FAVORITES = 'nav-favorites',
+    PROFILE = 'nav-profile',
+    INVOICES = 'nav-invoices',
+    MESSAGES = 'nav-messages',
+}
+
+/** Browser storage keys used by the app */
+export enum BrowserStorageKeys {
+    /** localStorage key holding the user's JWT access token */
+    AUTH_TOKEN = 'auth-token',
+}
+
+/** Account security rules — backend user login */
+export enum AccountRules {
+    /** Failed login attempts after which the account is locked */
+    MAX_FAILED_LOGIN_ATTEMPTS = 3,
 }

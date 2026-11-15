@@ -25,6 +25,7 @@ import {
 import type { ApiRequestFn } from '../../../fixtures/api/api-types';
 import { expect, test } from '../../../fixtures/pom/test-options';
 import {
+    addFavorite,
     deleteUser,
     registerUser,
     type RegisteredUser,
@@ -50,30 +51,6 @@ async function getProductIds(apiRequest: ApiRequestFn): Promise<string[]> {
     return required(body.data, 'products').map(({ id }) =>
         required(id, 'product id')
     );
-}
-
-/**
- * Adds a product to the user's favorites via `POST /favorites`.
- *
- * @param {ApiRequestFn} apiRequest - The `apiRequest` fixture.
- * @param {string} token - The user's access token.
- * @param {string} productId - The product to add.
- * @returns {Promise<Favorite>} The created favorite.
- */
-async function addFavorite(
-    apiRequest: ApiRequestFn,
-    token: string,
-    productId: string
-): Promise<Favorite> {
-    const { status, body } = await apiRequest<Favorite>({
-        method: 'POST',
-        url: ApiEndpoints.FAVORITES,
-        headers: token,
-        body: { product_id: productId },
-    });
-    expect(status).toBe(201);
-    expect(FavoriteSchema.parse(body)).toBeTruthy();
-    return body;
 }
 
 test.describe('favorites', () => {

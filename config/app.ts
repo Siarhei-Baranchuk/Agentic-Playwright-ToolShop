@@ -10,3 +10,9 @@ export const appConfig = {
     /** Backend API URL, from the API_URL env variable (default base for `apiRequest`) */
     apiUrl: process.env.API_URL,
 };
+
+/** UI timings that are not covered by the Playwright action / expect timeouts */
+export const uiTimeouts = {
+    /** How long an action waits for the request its click should send before repeating the click (ms) */
+    requestAfterClick: 3000,
+};
